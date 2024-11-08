@@ -1,0 +1,8 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.cds--cc--chart-wrapper {
+	--cds-charts-font-family: Roboto;
+	--cds-charts-font-family-condensed: 'Roboto Condensed';
+}
