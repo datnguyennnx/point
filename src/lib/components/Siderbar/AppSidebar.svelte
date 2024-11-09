@@ -49,11 +49,13 @@ const user = {
 						{#snippet child({ props })}
 							<Sidebar.MenuButton
 								{...props}
-								class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+								class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+							>
 								<Avatar.Avatar class="h-6 w-6 rounded-lg">
 									<Avatar.AvatarImage
 										src={'https://avatar.iran.liara.run/public'}
-										alt={user.name} />
+										alt={user.name}
+									/>
 									<Avatar.AvatarFallback class="rounded-lg">CN</Avatar.AvatarFallback>
 								</Avatar.Avatar>
 								<div class="grid flex-1 text-left text-sm leading-tight">
