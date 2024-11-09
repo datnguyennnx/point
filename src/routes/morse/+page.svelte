@@ -102,6 +102,7 @@
 						<div class="space-y-2">
 							<Label for="text-input">Your Message</Label>
 							<Textarea
+								showCopyButton={true}
 								id="text-input"
 								placeholder="Type your message here..."
 								bind:value={textInput}
@@ -109,7 +110,7 @@
 						</div>
 						<div class="space-y-2">
 							<Label for="morse-output">Morse Code</Label>
-							<Textarea id="morse-output" value={morseOutput} readonly />
+							<Textarea showCopyButton={true} id="morse-output" value={morseOutput} readonly />
 						</div>
 					</Card.Content>
 				</Card.Root>
@@ -128,6 +129,7 @@
 						<div class="space-y-2">
 							<Label for="morse-input">Morse Code</Label>
 							<Textarea
+								showCopyButton={true}
 								id="morse-input"
 								placeholder="Enter Morse code here..."
 								bind:value={morseInput}
@@ -135,7 +137,7 @@
 						</div>
 						<div class="space-y-2">
 							<Label for="text-output">Decoded Message</Label>
-							<Textarea id="text-output" value={textOutput} readonly />
+							<Textarea showCopyButton={true} id="text-output" value={textOutput} readonly />
 						</div>
 					</Card.Content>
 				</Card.Root>
