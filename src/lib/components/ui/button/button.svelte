@@ -58,8 +58,7 @@ let {
 		bind:this={ref}
 		class={cn(buttonVariants({ variant, size, className }))}
 		href={href}
-		{...restProps}
-	>
+		{...restProps}>
 		{@render children?.()}
 	</a>
 {:else}
@@ -67,8 +66,7 @@ let {
 		bind:this={ref}
 		class={cn(buttonVariants({ variant, size, className }))}
 		type={type}
-		{...restProps}
-	>
+		{...restProps}>
 		{@render children?.()}
 	</button>
 {/if}

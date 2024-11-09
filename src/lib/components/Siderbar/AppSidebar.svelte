@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ChartLine, ChevronUp, Binary } from 'lucide-svelte'
+import { ChevronUp, Binary } from 'lucide-svelte'
 import Settings from '$lib/components/Settings/Settings.svelte'
 import * as Sidebar from '$lib/components/ui/sidebar/index.js'
 import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -7,11 +7,6 @@ import * as Avatar from '$lib/components/ui/avatar/index.js'
 
 // Menu items.
 const items = [
-	{
-		title: 'Charts',
-		url: '/charts',
-		icon: ChartLine,
-	},
 	{
 		title: 'Morse',
 		url: '/morse',
@@ -54,13 +49,11 @@ const user = {
 						{#snippet child({ props })}
 							<Sidebar.MenuButton
 								{...props}
-								class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-							>
+								class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
 								<Avatar.Avatar class="h-6 w-6 rounded-lg">
 									<Avatar.AvatarImage
 										src={'https://avatar.iran.liara.run/public'}
-										alt={user.name}
-									/>
+										alt={user.name} />
 									<Avatar.AvatarFallback class="rounded-lg">CN</Avatar.AvatarFallback>
 								</Avatar.Avatar>
 								<div class="grid flex-1 text-left text-sm leading-tight">
