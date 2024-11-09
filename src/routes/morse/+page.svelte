@@ -1,102 +1,145 @@
 <script lang="ts">
+	import * as Tabs from '$lib/components/ui/tabs/index.js'
 	import * as Card from '$lib/components/ui/card/index.js'
 	import { Textarea } from '$lib/components/ui/textarea/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
 
-	let inputMorse = $state('')
-	let outputText = $state('')
+	let textInput = $state('')
+	let morseInput = $state('')
+	let morseOutput = $state('')
+	let textOutput = $state('')
 
-	// Define Morse code mappings
-	const MORSE_CODE: { [key: string]: string } = {
-		'.-': 'A',
-		'-...': 'B',
-		'-.-.': 'C',
-		'-..': 'D',
-		'.': 'E',
-		'..-.': 'F',
-		'--.': 'G',
-		'....': 'H',
-		'..': 'I',
-		'.---': 'J',
-		'-.-': 'K',
-		'.-..': 'L',
-		'--': 'M',
-		'-.': 'N',
-		'---': 'O',
-		'.--.': 'P',
-		'--.-': 'Q',
-		'.-.': 'R',
-		'...': 'S',
-		'-': 'T',
-		'..-': 'U',
-		'...-': 'V',
-		'.--': 'W',
-		'-..-': 'X',
-		'-.--': 'Y',
-		'--..': 'Z',
-		'.----': '1',
-		'..---': '2',
-		'...--': '3',
-		'....-': '4',
-		'.....': '5',
-		'-....': '6',
-		'--...': '7',
-		'---..': '8',
-		'----.': '9',
-		'-----': '0',
-		'/': ' ',
-		'|': ' ',
+	// Define the type for the morse code mapping
+	type MorseCodeMap = { [key: string]: string }
+
+	const MORSE_CODE: MorseCodeMap = {
+		A: '.-',
+		B: '-...',
+		C: '-.-.',
+		D: '-..',
+		E: '.',
+		F: '..-.',
+		G: '--.',
+		H: '....',
+		I: '..',
+		J: '.---',
+		K: '-.-',
+		L: '.-..',
+		M: '--',
+		N: '-.',
+		O: '---',
+		P: '.--.',
+		Q: '--.-',
+		R: '.-.',
+		S: '...',
+		T: '-',
+		U: '..-',
+		V: '...-',
+		W: '.--',
+		X: '-..-',
+		Y: '-.--',
+		Z: '--..',
+		'1': '.----',
+		'2': '..---',
+		'3': '...--',
+		'4': '....-',
+		'5': '.....',
+		'6': '-....',
+		'7': '--...',
+		'8': '---..',
+		'9': '----.',
+		'0': '-----',
+		' ': '/',
 	}
 
-	// Define a type for the keys of the MORSE_CODE
-	type MorseKey = keyof typeof MORSE_CODE
+	// Create reverse mapping for decoding
+	const REVERSE_MORSE: MorseCodeMap = Object.fromEntries(
+		Object.entries(MORSE_CODE).map(([char, morse]) => [morse, char]),
+	)
 
-	function convertMorseToText(morse: string): string {
-		const words = morse.trim().split('   ')
-		return words
-			.map((word) =>
-				word
-					.split(' ')
-					.map((character: string) => {
-						// Cast character to MorseKey, ensuring it's a valid key
-						return MORSE_CODE[character as MorseKey] || ''
-					})
-					.join(''),
-			)
+	function textToMorse(text: string): string {
+		return text
+			.toUpperCase()
+			.split('')
+			.map((char) => MORSE_CODE[char] || char)
 			.join(' ')
 	}
 
+	function morseToText(morse: string): string {
+		return morse
+			.split(' ')
+			.map((code) => REVERSE_MORSE[code] || code)
+			.join('')
+	}
+
+	// Reactive updates using $effect
 	$effect(() => {
-		outputText = convertMorseToText(inputMorse)
+		morseOutput = textToMorse(textInput)
+	})
+
+	$effect(() => {
+		textOutput = morseToText(morseInput)
 	})
 </script>
 
 <div class="flex w-full min-h-screen">
 	<div class="flex flex-col w-full justify-center items-center">
-		<Card.Root class="max-w-[640px]">
-			<Card.Header>
-				<Card.Title>Morse Convert</Card.Title>
-				<Card.Description>
-					Morse code is a telecommunications method which encodes text characters as standardized
-					sequences of two different signal durations, called dots and dashes, or dits and dahs.
-					Morse code is named after Samuel Morse, one of the early developers of the system adopted
-					for electrical telegraphy.
-				</Card.Description>
-			</Card.Header>
+		<Tabs.Root value="encode" class="max-w-[650px]">
+			<Tabs.List class="grid w-full grid-cols-2">
+				<Tabs.Trigger value="encode">Encoder</Tabs.Trigger>
+				<Tabs.Trigger value="decode">Decoder</Tabs.Trigger>
+			</Tabs.List>
 
-			<Card.Content class="space-y-2">
-				<Label class="text-md font-bold" for="morse-code">Your Morse Code</Label>
-				<Textarea
-					bind:value={inputMorse}
-					placeholder="Use dots (.) and dashes (-). Separate letters with spaces and words with three spaces."
-					id="morse-code"
-				/>
-			</Card.Content>
+			<Tabs.Content value="encode">
+				<Card.Root>
+					<Card.Header>
+						<Card.Title>Text to Morse Code</Card.Title>
+						<Card.Description>
+							Convert your text message into Morse code. Type your message below.
+						</Card.Description>
+					</Card.Header>
+					<Card.Content class="space-y-4">
+						<div class="space-y-2">
+							<Label for="text-input">Your Message</Label>
+							<Textarea
+								id="text-input"
+								placeholder="Type your message here..."
+								bind:value={textInput}
+							/>
+						</div>
+						<div class="space-y-2">
+							<Label for="morse-output">Morse Code</Label>
+							<Textarea id="morse-output" value={morseOutput} readonly />
+						</div>
+					</Card.Content>
+				</Card.Root>
+			</Tabs.Content>
 
-			<Card.Content class="space-y-2">
-				<Label class="text-md font-bold" for="message">Your message</Label>
-				<Textarea value={outputText} readonly placeholder="Your message" id="message" />
-			</Card.Content>
-		</Card.Root>
+			<Tabs.Content value="decode">
+				<Card.Root>
+					<Card.Header>
+						<Card.Title>Morse Code to Text</Card.Title>
+						<Card.Description>
+							Convert Morse code back to text. Use dots (.) and dashes (-), separate letters with
+							spaces.
+						</Card.Description>
+					</Card.Header>
+					<Card.Content class="space-y-4">
+						<div class="space-y-2">
+							<Label for="morse-input">Morse Code</Label>
+							<Textarea
+								id="morse-input"
+								placeholder="Enter Morse code here..."
+								bind:value={morseInput}
+							/>
+						</div>
+						<div class="space-y-2">
+							<Label for="text-output">Decoded Message</Label>
+							<Textarea id="text-output" value={textOutput} readonly />
+						</div>
+					</Card.Content>
+				</Card.Root>
+			</Tabs.Content>
+		</Tabs.Root>
 	</div>
 </div>
