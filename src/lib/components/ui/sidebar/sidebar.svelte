@@ -1,32 +1,32 @@
 <script lang="ts">
-	import * as Sheet from '$lib/components/ui/sheet/index.js'
-	import { cn } from '$lib/utils.js'
-	import type { WithElementRef } from 'bits-ui'
-	import type { HTMLAttributes } from 'svelte/elements'
-	import { SIDEBAR_WIDTH_MOBILE } from './constants.js'
-	import { useSidebar } from './context.svelte.js'
+import * as Sheet from '$lib/components/ui/sheet/index.js'
+import { cn } from '$lib/utils.js'
+import type { WithElementRef } from 'bits-ui'
+import type { HTMLAttributes } from 'svelte/elements'
+import { SIDEBAR_WIDTH_MOBILE } from './constants.js'
+import { useSidebar } from './context.svelte.js'
 
-	let {
-		ref = $bindable(null),
-		side = 'left',
-		variant = 'sidebar',
-		collapsible = 'offcanvas',
-		class: className,
-		children,
-		...restProps
-	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
-		side?: 'left' | 'right'
-		variant?: 'sidebar' | 'floating' | 'inset'
-		collapsible?: 'offcanvas' | 'icon' | 'none'
-	} = $props()
+let {
+	ref = $bindable(null),
+	side = 'left',
+	variant = 'sidebar',
+	collapsible = 'offcanvas',
+	class: className,
+	children,
+	...restProps
+}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
+	side?: 'left' | 'right'
+	variant?: 'sidebar' | 'floating' | 'inset'
+	collapsible?: 'offcanvas' | 'icon' | 'none'
+} = $props()
 
-	const sidebar = useSidebar()
+const sidebar = useSidebar()
 </script>
 
 {#if collapsible === 'none'}
 	<div
 		class={cn(
-			'bg-sidebar text-sidebar-foreground flex h-full w-[--sidebar-width] flex-col',
+			'flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground',
 			className,
 		)}
 		bind:this={ref}
@@ -44,9 +44,9 @@
 		<Sheet.Content
 			data-sidebar="sidebar"
 			data-mobile="true"
-			class="bg-sidebar text-sidebar-foreground w-[--sidebar-width] p-0 [&>button]:hidden"
+			class="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
 			style="--sidebar-width: {SIDEBAR_WIDTH_MOBILE};"
-			{side}
+			side={side}
 		>
 			<div class="flex h-full w-full flex-col">
 				{@render children?.()}
@@ -56,7 +56,7 @@
 {:else}
 	<div
 		bind:this={ref}
-		class="text-sidebar-foreground group peer hidden md:block"
+		class="group peer hidden text-sidebar-foreground md:block"
 		data-state={sidebar.state}
 		data-collapsible={sidebar.state === 'collapsed' ? collapsible : ''}
 		data-variant={variant}
@@ -89,7 +89,7 @@
 		>
 			<div
 				data-sidebar="sidebar"
-				class="bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow"
+				class="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
 			>
 				{@render children?.()}
 			</div>

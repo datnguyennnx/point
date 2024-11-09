@@ -1,89 +1,88 @@
 <script lang="ts">
-	import * as Tabs from '$lib/components/ui/tabs/index.js'
-	import * as Card from '$lib/components/ui/card/index.js'
-	import { Textarea } from '$lib/components/ui/textarea/index.js'
-	import { Label } from '$lib/components/ui/label/index.js'
+import * as Tabs from '$lib/components/ui/tabs/index.js'
+import * as Card from '$lib/components/ui/card/index.js'
+import { Textarea } from '$lib/components/ui/textarea/index.js'
+import { Label } from '$lib/components/ui/label/index.js'
 
-	let textInput = $state('')
-	let morseInput = $state('')
-	let morseOutput = $state('')
-	let textOutput = $state('')
+let textInput = $state('')
+let morseInput = $state('')
+let morseOutput = $state('')
+let textOutput = $state('')
 
-	// Define the type for the morse code mapping
-	type MorseCodeMap = { [key: string]: string }
+// Define the type for the morse code mapping
+type MorseCodeMap = { [key: string]: string }
 
-	const MORSE_CODE: MorseCodeMap = {
-		A: '.-',
-		B: '-...',
-		C: '-.-.',
-		D: '-..',
-		E: '.',
-		F: '..-.',
-		G: '--.',
-		H: '....',
-		I: '..',
-		J: '.---',
-		K: '-.-',
-		L: '.-..',
-		M: '--',
-		N: '-.',
-		O: '---',
-		P: '.--.',
-		Q: '--.-',
-		R: '.-.',
-		S: '...',
-		T: '-',
-		U: '..-',
-		V: '...-',
-		W: '.--',
-		X: '-..-',
-		Y: '-.--',
-		Z: '--..',
-		'1': '.----',
-		'2': '..---',
-		'3': '...--',
-		'4': '....-',
-		'5': '.....',
-		'6': '-....',
-		'7': '--...',
-		'8': '---..',
-		'9': '----.',
-		'0': '-----',
-		' ': '/',
-	}
+const MORSE_CODE: MorseCodeMap = {
+	A: '.-',
+	B: '-...',
+	C: '-.-.',
+	D: '-..',
+	E: '.',
+	F: '..-.',
+	G: '--.',
+	H: '....',
+	I: '..',
+	J: '.---',
+	K: '-.-',
+	L: '.-..',
+	M: '--',
+	N: '-.',
+	O: '---',
+	P: '.--.',
+	Q: '--.-',
+	R: '.-.',
+	S: '...',
+	T: '-',
+	U: '..-',
+	V: '...-',
+	W: '.--',
+	X: '-..-',
+	Y: '-.--',
+	Z: '--..',
+	'1': '.----',
+	'2': '..---',
+	'3': '...--',
+	'4': '....-',
+	'5': '.....',
+	'6': '-....',
+	'7': '--...',
+	'8': '---..',
+	'9': '----.',
+	'0': '-----',
+	' ': '/',
+}
 
-	// Create reverse mapping for decoding
-	const REVERSE_MORSE: MorseCodeMap = Object.fromEntries(
-		Object.entries(MORSE_CODE).map(([char, morse]) => [morse, char]),
-	)
+// Create reverse mapping for decoding
+const REVERSE_MORSE: MorseCodeMap = Object.fromEntries(
+	Object.entries(MORSE_CODE).map(([char, morse]) => [morse, char]),
+)
 
-	function textToMorse(text: string): string {
-		return text
-			.toUpperCase()
-			.split('')
-			.map((char) => MORSE_CODE[char] || char)
-			.join(' ')
-	}
+function textToMorse(text: string): string {
+	return text
+		.toUpperCase()
+		.split('')
+		.map((char) => MORSE_CODE[char] || char)
+		.join(' ')
+}
 
-	function morseToText(morse: string): string {
-		return morse
-			.split(' ')
-			.map((code) => REVERSE_MORSE[code] || code)
-			.join('')
-	}
+function morseToText(morse: string): string {
+	return morse
+		.split(' ')
+		.map((code) => REVERSE_MORSE[code] || code)
+		.join('')
+}
 
-	// Reactive updates using $effect
-	$effect(() => {
-		morseOutput = textToMorse(textInput)
-	})
+$effect(() => {
+	morseOutput = textToMorse(textInput)
+})
 
-	$effect(() => {
-		textOutput = morseToText(morseInput)
-	})
+$effect(() => {
+	textOutput = morseToText(morseInput)
+})
 </script>
 
-<div class="flex w-full min-h-screen">
-	<div class="flex flex-col w-full justify-center items-center">
+<div class="flex min-h-screen w-full">
+	<div class="flex w-full flex-col items-center justify-center">
 		<Tabs.Root value="encode" class="max-w-[650px]">
 			<Tabs.List class="grid w-full grid-cols-2">
 				<Tabs.Trigger value="encode">Encoder</Tabs.Trigger>

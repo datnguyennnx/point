@@ -1,27 +1,27 @@
 <script lang="ts">
-	import { ChartLine, ChevronUp, Binary } from 'lucide-svelte'
-	import Settings from '$lib/components/Settings/Settings.svelte'
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
-	import * as Avatar from '$lib/components/ui/avatar/index.js'
+import { ChartLine, ChevronUp, Binary } from 'lucide-svelte'
+import Settings from '$lib/components/Settings/Settings.svelte'
+import * as Sidebar from '$lib/components/ui/sidebar/index.js'
+import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
+import * as Avatar from '$lib/components/ui/avatar/index.js'
 
-	// Menu items.
-	const items = [
-		{
-			title: 'Charts',
-			url: '/charts',
-			icon: ChartLine,
-		},
-		{
-			title: 'Morse',
-			url: '/morse',
-			icon: Binary,
-		},
-	]
-	const user = {
-		name: 'test',
-		email: 'hello@gmail.com',
-	}
+// Menu items.
+const items = [
+	{
+		title: 'Charts',
+		url: '/charts',
+		icon: ChartLine,
+	},
+	{
+		title: 'Morse',
+		url: '/morse',
+		icon: Binary,
+	},
+]
+const user = {
+	name: 'test',
+	email: 'hello@gmail.com',
+}
 </script>
 
 <Sidebar.Root collapsible="icon">

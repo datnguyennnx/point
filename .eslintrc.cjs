@@ -7,7 +7,14 @@ module.exports = {
 		'plugin:cypress/recommended',
 		'prettier',
 	],
-	parser: '@typescript-eslint/parser',
+	parserOptions: {
+		parser: {
+			// Specify a parser for each lang.
+			ts: '@typescript-eslint/parser',
+			js: 'espree',
+			typescript: '@typescript-eslint/parser',
+		},
+	},
 	plugins: ['@typescript-eslint'],
 	parserOptions: {
 		sourceType: 'module',

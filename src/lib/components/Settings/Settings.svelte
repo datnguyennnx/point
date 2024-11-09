@@ -1,32 +1,31 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js'
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
-	import { mode, setMode } from 'mode-watcher'
-	import { Settings, Info, Underline } from 'lucide-svelte'
+import * as Dialog from '$lib/components/ui/dialog/index.js'
+import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
+import { mode, setMode } from 'mode-watcher'
+import { Settings, Info } from 'lucide-svelte'
 
-	let isOpen = false
-	let activeSection = 'general'
+let activeSection = 'general'
 
-	const sidebarItems = [
-		{ id: 'general', label: 'General', icon: Settings },
-		{ id: 'about', label: 'About', icon: Info },
-	]
+const sidebarItems = [
+	{ id: 'general', label: 'General', icon: Settings },
+	{ id: 'about', label: 'About', icon: Info },
+]
 </script>
 
 <Dialog.Root>
 	<Dialog.Trigger class="flex w-full items-start">Settings</Dialog.Trigger>
-	<Dialog.Content class="sm:max-w-[900px] p-0 gap-0">
+	<Dialog.Content class="gap-0 p-0 sm:max-w-[900px]">
 		<div class="flex h-[600px]">
 			<!-- Sidebar -->
 			<div class="w-[200px] border-r border-border bg-muted/40">
 				<nav class="p-2">
 					{#each sidebarItems as item}
 						<button
-							class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors
+							class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors
 					{activeSection === item.id ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}"
 							on:click={() => (activeSection = item.id)}
 						>
-							<svelte:component this={item.icon} class="w-4 h-4" />
+							<svelte:component this={item.icon} class="h-4 w-4" />
 							{item.label}
 						</button>
 					{/each}
@@ -37,10 +36,10 @@
 			<div class="flex-1 overflow-y-auto">
 				{#if activeSection === 'general'}
 					<div class="p-6">
-						<h3 class="text-lg font-medium mb-4">General Settings</h3>
+						<h3 class="mb-4 text-lg font-medium">General Settings</h3>
 						<div class="space-y-4">
 							<!-- Theme Dropdown -->
-							<div class="flex justify-between items-center">
+							<div class="flex items-center justify-between">
 								<span class="text-sm">Theme</span>
 								<DropdownMenu.Root>
 									<DropdownMenu.Trigger
@@ -58,19 +57,19 @@
 										<DropdownMenu.Group>
 											<DropdownMenu.Item>
 												<button
-													class="w-full flex justify-start"
+													class="flex w-full justify-start"
 													on:click={() => setMode('system')}
 												>
 													System</button
 												>
 											</DropdownMenu.Item>
 											<DropdownMenu.Item>
-												<button class="w-full flex justify-start" on:click={() => setMode('light')}>
+												<button class="flex w-full justify-start" on:click={() => setMode('light')}>
 													Light</button
 												>
 											</DropdownMenu.Item>
 											<DropdownMenu.Item>
-												<button class="w-full flex justify-start" on:click={() => setMode('dark')}>
+												<button class="flex w-full justify-start" on:click={() => setMode('dark')}>
 													Dark</button
 												>
 											</DropdownMenu.Item>
@@ -80,7 +79,7 @@
 							</div>
 
 							<!-- Language Dropdown -->
-							<div class="flex justify-between items-center">
+							<div class="flex items-center justify-between">
 								<span class="text-sm">Language</span>
 								<DropdownMenu.Root>
 									<DropdownMenu.Trigger
@@ -101,7 +100,7 @@
 					</div>
 				{:else if activeSection === 'about'}
 					<div class="p-6">
-						<h3 class="text-lg font-medium mb-4">About</h3>
+						<h3 class="mb-4 text-lg font-medium">About</h3>
 						<div class="space-y-4 text-sm">
 							<p>Version: 1.0.0</p>
 							<p>Build: 2024.11.09</p>

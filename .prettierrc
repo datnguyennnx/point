@@ -5,7 +5,10 @@
 	"printWidth": 100,
 	"semi": false,
 	"jsxBracketSameLine": true,
-	"plugins": ["prettier-plugin-svelte"],
-	"pluginSearchDirs": ["."],
+	"svelteSortOrder": "options-styles-scripts-markup",
+	"svelteBracketNewLine": false,
+	"svelteAllowShorthand": false,
+	"svelteIndentScriptAndStyle": false,
+	"plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
 	"overrides": [{ "files": "*.svelte", "options": { "parser": "svelte" } }]
 }
