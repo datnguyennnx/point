@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css'
+	import { inject } from '@vercel/analytics'
 	import { mode, ModeWatcher } from 'mode-watcher'
 	import { SidebarProvider, SidebarTrigger } from '$lib/components/ui/sidebar/index.js'
 	import AppSidebar from '$lib/components/Siderbar/AppSidebar.svelte'
