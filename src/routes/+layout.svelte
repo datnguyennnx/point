@@ -1,16 +1,15 @@
 <script lang="ts">
 	import '../app.css'
 	import { mode, ModeWatcher } from 'mode-watcher'
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js'
-	import MainSidebar from '$lib/components/Siderbar/MainSidebar.svelte'
+	import { SidebarProvider, SidebarTrigger } from '$lib/components/ui/sidebar/index.js'
+	import AppSidebar from '$lib/components/Siderbar/AppSidebar.svelte'
 </script>
 
 <ModeWatcher defaultMode="light" />
 <main>
-	<Sidebar.Provider>
-		<div class="flex flex-grow">
-			<MainSidebar />
-			<slot />
-		</div>
-	</Sidebar.Provider>
+	<SidebarProvider>
+		<AppSidebar />
+		<SidebarTrigger />
+		<slot />
+	</SidebarProvider>
 </main>

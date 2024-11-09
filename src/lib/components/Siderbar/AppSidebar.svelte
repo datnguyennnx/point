@@ -3,6 +3,7 @@
 	import Settings from '$lib/components/Settings/Settings.svelte'
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
+	import * as Avatar from '$lib/components/ui/avatar/index.js'
 
 	// Menu items.
 	const items = [
@@ -12,9 +13,13 @@
 			icon: ChartLine,
 		},
 	]
+	const user = {
+		name: 'test',
+		email: 'hello@gmail.com',
+	}
 </script>
 
-<Sidebar.Root>
+<Sidebar.Root collapsible="icon">
 	<Sidebar.Content>
 		<Sidebar.Group>
 			<Sidebar.GroupLabel>Application</Sidebar.GroupLabel>
@@ -25,7 +30,7 @@
 							<Sidebar.MenuButton>
 								{#snippet child({ props })}
 									<a href={item.url} {...props}>
-										<item.icon />
+										<item.icon class="w-8 h-8" />
 										<span>{item.title}</span>
 									</a>
 								{/snippet}
@@ -46,7 +51,16 @@
 								{...props}
 								class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 							>
-								Username
+								<Avatar.Avatar class="h-6 w-6 rounded-lg">
+									<Avatar.AvatarImage
+										src={'https://avatar.iran.liara.run/public'}
+										alt={user.name}
+									/>
+									<Avatar.AvatarFallback class="rounded-lg">CN</Avatar.AvatarFallback>
+								</Avatar.Avatar>
+								<div class="grid flex-1 text-left text-sm leading-tight">
+									<span class="truncate text-xs">{user.email}</span>
+								</div>
 								<ChevronUp class="ml-auto" />
 							</Sidebar.MenuButton>
 						{/snippet}
