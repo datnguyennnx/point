@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChartLine, ChevronUp } from 'lucide-svelte'
+	import { ChartLine, ChevronUp, Binary } from 'lucide-svelte'
 	import Settings from '$lib/components/Settings/Settings.svelte'
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -11,6 +11,11 @@
 			title: 'Charts',
 			url: '/charts',
 			icon: ChartLine,
+		},
+		{
+			title: 'Morse',
+			url: '/morse',
+			icon: Binary,
 		},
 	]
 	const user = {
@@ -30,7 +35,7 @@
 							<Sidebar.MenuButton>
 								{#snippet child({ props })}
 									<a href={item.url} {...props}>
-										<item.icon class="w-8 h-8" />
+										<item.icon />
 										<span>{item.title}</span>
 									</a>
 								{/snippet}

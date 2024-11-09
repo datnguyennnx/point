@@ -12,7 +12,7 @@
 		"lint": "pnpm run lint:frontend ; pnpm run lint:types",
 		"lint:frontend": "eslint . --fix",
 		"lint:types": "pnpm run check",
-		"format": "prettier --plugin-search-dir --write \"**/*.{js,ts,svelte,css,md,html,json}\"",
+		"format": "prettier . --write",
 		"tauri": "tauri"
 	},
 	"license": "MIT",
