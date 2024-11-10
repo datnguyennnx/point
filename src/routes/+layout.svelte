@@ -4,8 +4,8 @@ import { dev } from '$app/environment'
 import { inject } from '@vercel/analytics'
 import { ModeWatcher } from 'mode-watcher'
 import { SidebarProvider, SidebarTrigger } from '$lib/components/ui/sidebar/index.js'
-import AppSidebar from '$lib/components/Siderbar/AppSidebar.svelte'
-// Inject the Analytics functionality
+import AppSidebar from '$lib/components/common/Siderbar/AppSidebar.svelte'
+
 inject({ mode: dev ? 'development' : 'production' })
 </script>
 
