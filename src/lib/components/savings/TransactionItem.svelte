@@ -24,9 +24,9 @@ function capitalizeFirstLetter(val: string) {
 		<div class="shrink-0 rounded-full p-2">
 			<CategoryIcon category={transaction.category} color={transaction.categoryColor} size={20} />
 		</div>
-		<div class="flex w-full flex-col sm:flex-row sm:space-x-4">
+		<div class="flex w-full flex-col items-center sm:flex-row sm:space-x-4">
 			<p class="font-medium">{capitalizeFirstLetter(transaction.category)}</p>
-			<p class="truncate text-sm text-gray-600">{transaction.description}</p>
+			<p class="truncate text-sm text-gray-500">{transaction.description}</p>
 		</div>
 	</div>
 	<div class="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end">
