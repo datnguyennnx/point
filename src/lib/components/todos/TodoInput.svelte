@@ -1,14 +1,14 @@
 <script lang="ts">
 import { Input } from '$lib/components/ui/input'
 import { Button } from '$lib/components/ui/button'
-import { db } from '$lib/database'
+import { tododb } from '$lib/database'
 
 let newTodoText = $state('')
 
 async function addTodo() {
 	if (newTodoText.trim()) {
 		try {
-			await db.addTodo(newTodoText)
+			await tododb.addTodo(newTodoText)
 			newTodoText = ''
 		} catch (error) {
 			console.error('Failed to add todo:', error)

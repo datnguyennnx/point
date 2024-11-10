@@ -1,20 +1,20 @@
 <script lang="ts">
 import { liveQuery } from 'dexie'
-import { db } from '$lib/database'
+import { tododb } from '$lib/database'
 import TodoItem from './TodoItem.svelte'
 
 export let filter: 'all' | 'active' | 'completed' = 'all'
 
 // Live query todos based on filter
-$: todos = liveQuery(() => db.getFilteredTodos(filter))
+$: todos = liveQuery(() => tododb.getFilteredTodos(filter))
 
 // Handler functions for TodoItem
 async function handleToggle(id: number) {
-	await db.toggleTodo(id)
+	await tododb.toggleTodo(id)
 }
 
 async function handleDelete(id: number) {
-	await db.deleteTodo(id)
+	await tododb.deleteTodo(id)
 }
 </script>
 

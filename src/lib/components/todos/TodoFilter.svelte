@@ -1,13 +1,13 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
-import { db } from '$lib/database'
+import { tododb } from '$lib/database'
 import { liveQuery } from 'dexie'
 
 export let filter: 'all' | 'active' | 'completed' = 'all'
 
 // Get stats for the filter buttons
 const stats = liveQuery(async () => {
-	const allTodos = await db.getTodos()
+	const allTodos = await tododb.getTodos()
 	return {
 		total: allTodos.length,
 		completed: allTodos.filter((t) => t.completed).length,
