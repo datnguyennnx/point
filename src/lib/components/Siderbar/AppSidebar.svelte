@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ChevronUp, Binary } from 'lucide-svelte'
+import { ChevronUp, Binary, Wand } from 'lucide-svelte'
 import Settings from '$lib/components/Settings/Settings.svelte'
 import * as Sidebar from '$lib/components/ui/sidebar/index.js'
 import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -11,6 +11,11 @@ const items = [
 		title: 'Morse',
 		url: '/morse',
 		icon: Binary,
+	},
+	{
+		title: 'Tarot',
+		url: '/tarot',
+		icon: Wand,
 	},
 ]
 const user = {
