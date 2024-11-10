@@ -17,26 +17,29 @@ function capitalizeFirstLetter(val: string) {
 </script>
 
 <div
-	class="flex items-center justify-between rounded-lg border p-4"
+	class="flex flex-col items-start justify-between gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:gap-0"
 	style:background-color={backgroundColor}
 >
-	<div class="flex items-center gap-1">
-		<div class="rounded-full p-2">
+	<div class="flex w-full items-center gap-1 sm:w-auto">
+		<div class="shrink-0 rounded-full p-2">
 			<CategoryIcon category={transaction.category} color={transaction.categoryColor} size={20} />
 		</div>
-		<div class="flex flex-row space-x-4">
-			<p>{capitalizeFirstLetter(transaction.category)}</p>
-			<p>{transaction.description}</p>
+		<div class="flex w-full flex-col sm:flex-row sm:space-x-4">
+			<p class="font-medium">{capitalizeFirstLetter(transaction.category)}</p>
+			<p class="truncate text-sm text-gray-600">{transaction.description}</p>
 		</div>
 	</div>
-	<div class="flex items-center gap-4">
-		<div class={transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}>
+	<div class="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end">
+		<div
+			class={`${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'} whitespace-nowrap`}
+		>
 			{transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
 		</div>
 		<Button
 			variant="ghost"
 			size="icon"
 			onclick={() => transaction.id !== undefined && onDelete(transaction.id)}
+			class="shrink-0"
 		>
 			<Trash2 class="h-4 w-4" />
 		</Button>

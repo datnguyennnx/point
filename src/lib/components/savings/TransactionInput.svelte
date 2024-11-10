@@ -75,7 +75,6 @@ async function addTransaction() {
 		<Select.Root type="single" value={selectedCategory} onValueChange={handleCategoryChange}>
 			<Select.Trigger class="w-full">
 				<div class="flex items-center gap-2">
-					<CategoryIcon category={selectedCategory} color={categoryColor} size={16} />
 					{CATEGORIES.find((c) => c.value === selectedCategory)?.label}
 				</div>
 			</Select.Trigger>
