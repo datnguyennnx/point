@@ -13,7 +13,6 @@ let selectedTags = $state<string[]>([])
 let selectedCategory = $state(CATEGORIES[0].value)
 let categoryColor = $state(CATEGORIES[0].defaultColor)
 
-// Add function to handle category change
 function handleCategoryChange(value: string) {
 	selectedCategory = value
 	const newCategory = CATEGORIES.find((c) => c.value === value)
@@ -24,7 +23,6 @@ function handleCategoryChange(value: string) {
 
 async function addTransaction() {
 	if (!amount || !description) return
-
 	try {
 		const transactionData = {
 			amount: parseFloat(amount),
@@ -35,9 +33,7 @@ async function addTransaction() {
 			categoryColor,
 			date: Date.now(),
 		}
-
 		await savingsdb.addTransaction(transactionData)
-
 		// Reset form
 		amount = ''
 		description = ''

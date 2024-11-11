@@ -6,10 +6,12 @@ import { formatCurrency } from '$lib/utils/currency'
 import { hexToRGBA } from '$lib/utils/color'
 import CategoryIcon from '$lib/components/savings/CategoryIcon.svelte'
 
-export let transaction: Transaction
-export let onDelete: (id: number) => void
+let { transaction, onDelete } = $props<{
+	transaction: Transaction
+	onDelete: (id: number) => void
+}>()
 
-$: backgroundColor = hexToRGBA(transaction.categoryColor, 0.2)
+let backgroundColor = $derived(hexToRGBA(transaction.categoryColor, 0.2))
 
 function capitalizeFirstLetter(val: string) {
 	return String(val).charAt(0).toUpperCase() + String(val).slice(1)

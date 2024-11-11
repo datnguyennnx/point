@@ -1,8 +1,15 @@
 <script lang="ts">
 import { ShoppingBag, Coins, Utensils, Car, MoreHorizontal } from 'lucide-svelte'
-export let category: string
-export let color: string = '#000000'
-export let size: number = 16
+
+let {
+	category,
+	color = '#000000',
+	size = 16,
+} = $props<{
+	category: string
+	color?: string
+	size?: number
+}>()
 
 const icons = {
 	shopping: ShoppingBag,
@@ -11,7 +18,8 @@ const icons = {
 	car: Car,
 	other: MoreHorizontal,
 }
-$: Icon = icons[category as keyof typeof icons]
+
+let Icon = $derived(icons[category as keyof typeof icons])
 </script>
 
 {#if Icon}
