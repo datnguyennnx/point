@@ -6,8 +6,9 @@ const host = process.env.TAURI_DEV_HOST
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
 	plugins: [sveltekit()],
-	ssr: {
-		noExternal: process.env.NODE_ENV === 'production' ? ['@carbon/charts'] : [],
+
+	define: {
+		'import.meta.env.VERCEL_ANALYTICS_ID': JSON.stringify(process.env.VERCEL_ANALYTICS_ID),
 	},
 
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
