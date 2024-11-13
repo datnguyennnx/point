@@ -34,6 +34,7 @@ async function addTransaction() {
 			date: Date.now(),
 		}
 		await savingsdb.addTransaction(transactionData)
+
 		// Reset form
 		amount = ''
 		description = ''

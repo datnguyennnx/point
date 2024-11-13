@@ -6,6 +6,9 @@ const host = process.env.TAURI_DEV_HOST
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
 	plugins: [sveltekit()],
+	optimizeDeps: {
+		exclude: ['@electric-sql/pglite'],
+	},
 
 	define: {
 		'import.meta.env.VERCEL_ANALYTICS_ID': JSON.stringify(process.env.VERCEL_ANALYTICS_ID),

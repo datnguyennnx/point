@@ -1,27 +1,32 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
 import { CheckIcon, TrashIcon } from 'lucide-svelte'
-import type { Todo } from '$lib/database'
+import type { Todo } from '$lib/database/todo-db'
 import { formatDate } from '$lib/utils/date'
 
-export let todo: Todo
-export let onToggle: (id: number) => Promise<void>
-export let onDelete: (id: number) => Promise<void>
+// Define props with explicit type
+const props = $props<{
+	todo: Todo
+	onToggle: (id: number) => Promise<void>
+	onDelete: (id: number) => Promise<void>
+}>()
 
-const handleToggle = async () => {
-	if (todo.id) {
+// Handle todo toggle
+async function handleToggle() {
+	if (props.todo.id) {
 		try {
-			await onToggle(todo.id)
+			await props.onToggle(props.todo.id)
 		} catch (error) {
 			console.error('Failed to toggle todo:', error)
 		}
 	}
 }
 
-const handleDelete = async () => {
-	if (todo.id) {
+// Handle todo deletion
+async function handleDelete() {
+	if (props.todo.id) {
 		try {
-			await onDelete(todo.id)
+			await props.onDelete(props.todo.id)
 		} catch (error) {
 			console.error('Failed to delete todo:', error)
 		}
@@ -32,14 +37,14 @@ const handleDelete = async () => {
 <div class="flex items-center justify-between rounded-md border bg-card p-3">
 	<div class="flex items-center space-x-2">
 		<Button variant="ghost" size="icon" onclick={handleToggle}>
-			<CheckIcon class={todo.completed ? 'text-green-500' : 'text-muted-foreground'} />
+			<CheckIcon class={props.todo.completed ? 'text-green-500' : 'text-muted-foreground'} />
 		</Button>
 		<div class="flex flex-col">
-			<span class={todo.completed ? 'text-muted-foreground line-through' : ''}>
-				{todo.text}
+			<span class={props.todo.completed ? 'text-muted-foreground line-through' : ''}>
+				{props.todo.text}
 			</span>
 			<span class="text-xs text-muted-foreground">
-				{formatDate(todo.createdAt)}
+				{formatDate(props.todo.createdAt)}
 			</span>
 		</div>
 	</div>
