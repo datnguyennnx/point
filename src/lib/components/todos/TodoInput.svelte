@@ -3,19 +3,25 @@ import { Input } from '$lib/components/ui/input'
 import { Button } from '$lib/components/ui/button'
 import { tododb } from '$lib/database'
 
+// Use $state for todo input text
 let newTodoText = $state('')
 
+// Function to add a new todo
 async function addTodo() {
-	if (newTodoText.trim()) {
+	const trimmedText = newTodoText.trim()
+	if (trimmedText) {
 		try {
-			await tododb.addTodo(newTodoText)
+			await tododb.addTodo(trimmedText)
+			// Clear input after successful addition
 			newTodoText = ''
 		} catch (error) {
 			console.error('Failed to add todo:', error)
+			// Optionally, you could add error handling UI here
 		}
 	}
 }
 
+// Handle key press event for Enter key
 function handleKeyPress(event: KeyboardEvent) {
 	if (event.key === 'Enter') {
 		addTodo()

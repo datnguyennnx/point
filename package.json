@@ -14,11 +14,10 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"@sveltejs/adapter-vercel": "^5.4.7",
+		"@electric-sql/pglite": "^0.2.13",
 		"@tauri-apps/api": "^2",
 		"@tauri-apps/plugin-shell": "^2",
 		"@vercel/analytics": "^1.3.2",
-		"dexie": "^4.0.9",
 		"mode-watcher": "^0.4.1"
 	},
 	"devDependencies": {

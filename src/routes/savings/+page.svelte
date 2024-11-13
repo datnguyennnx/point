@@ -1,25 +1,39 @@
 <script lang="ts">
 import * as Card from '$lib/components/ui/card'
 import Canvas from '$lib/components/common/Canvas/Canvas.svelte'
-import { liveQuery } from 'dexie'
 import { savingsdb } from '$lib/database'
 import TransactionInput from '$lib/components/savings/TransactionInput.svelte'
 import TransactionList from '$lib/components/savings/TransactionList.svelte'
 
 let filter = $state<'all' | 'income' | 'expense'>('all')
 
-const stats = liveQuery(async () => {
-	const balance = await savingsdb.getBalance()
-	const transactions = await savingsdb.getTransactions()
-	return {
-		balance,
-		totalIncome: transactions
-			.filter((t) => t.type === 'income')
-			.reduce((acc, curr) => acc + curr.amount, 0),
-		totalExpense: transactions
-			.filter((t) => t.type === 'expense')
-			.reduce((acc, curr) => acc + curr.amount, 0),
+let stats = $state({
+	balance: 0,
+	totalIncome: 0,
+	totalExpense: 0,
+})
+
+async function loadStats() {
+	try {
+		const balance = await savingsdb.getBalance()
+		const transactions = await savingsdb.getTransactions()
+		stats = {
+			balance,
+			totalIncome: transactions
+				.filter((t) => t.type === 'income')
+				.reduce((acc, curr) => acc + curr.amount, 0),
+			totalExpense: transactions
+				.filter((t) => t.type === 'expense')
+				.reduce((acc, curr) => acc + curr.amount, 0),
+		}
+	} catch (error) {
+		console.error('Failed to load stats:', error)
 	}
+}
+
+// Initial load
+$effect(() => {
+	loadStats()
 })
 </script>
 
@@ -35,19 +49,19 @@ const stats = liveQuery(async () => {
 				<div class="text-center">
 					<div class="text-sm text-muted-foreground">Balance</div>
 					<div class="text-2xl font-bold">
-						${$stats?.balance ?? 0}
+						${stats.balance}
 					</div>
 				</div>
 				<div class="text-center">
 					<div class="text-sm text-muted-foreground">Income</div>
 					<div class="text-2xl font-bold text-green-500">
-						${$stats?.totalIncome ?? 0}
+						${stats.totalIncome}
 					</div>
 				</div>
 				<div class="text-center">
 					<div class="text-sm text-muted-foreground">Expenses</div>
 					<div class="text-2xl font-bold text-red-500">
-						${$stats?.totalExpense ?? 0}
+						${stats.totalExpense}
 					</div>
 				</div>
 			</div>
