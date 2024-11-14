@@ -1,4 +1,5 @@
-import { PGlite } from '@electric-sql/pglite'
+import { databaseManager } from './database'
+import type { PGlite } from '@electric-sql/pglite'
 
 export interface Transaction {
 	id?: number
@@ -18,206 +19,150 @@ export interface Tag {
 	type: 'income' | 'expense' | 'both'
 }
 
-export class WalletDB {
-	private static instance: WalletDB
-	private db: PGlite
-	private initialized: boolean = false
+interface TransactionRow {
+	id: number
+	amount: number
+	description: string
+	type: string
+	tags: string[]
+	category: string
+	category_color: string
+	date: number
+}
 
-	private constructor() {
-		this.db = new PGlite('idb://WalletDatabase')
-	}
+interface TagRow {
+	id: number
+	name: string
+	color: string
+	type: string
+}
 
-	public static getInstance(): WalletDB {
-		if (!WalletDB.instance) {
-			WalletDB.instance = new WalletDB()
+interface BalanceRow {
+	balance: number
+}
+
+export class Savings {
+	private static instance: Savings
+	private db: PGlite | null = null
+
+	private constructor() {}
+
+	public static getInstance(): Savings {
+		if (!Savings.instance) {
+			Savings.instance = new Savings()
 		}
-		return WalletDB.instance
+		return Savings.instance
 	}
 
-	/**
-	 * Initialize the database
-	 */
-	async init(): Promise<void> {
-		if (this.initialized) return
-
-		try {
-			await this.db.exec(`
-                CREATE TABLE IF NOT EXISTS transactions (
-                    id SERIAL PRIMARY KEY,
-                    amount DECIMAL NOT NULL,
-                    description TEXT NOT NULL,
-                    type TEXT CHECK (type IN ('income', 'expense')),
-                    tags TEXT[] DEFAULT '{}',
-                    category TEXT NOT NULL,
-                    category_color TEXT NOT NULL,
-                    date BIGINT NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS tags (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT NOT NULL UNIQUE,
-                    color TEXT NOT NULL,
-                    type TEXT CHECK (type IN ('income', 'expense', 'both'))
-                );
-            `)
-
-			this.initialized = true
-		} catch (error) {
-			console.error('Failed to initialize database:', error)
-			this.initialized = false
-			throw error
+	private async getDatabase() {
+		if (!this.db) {
+			this.db = await databaseManager.getDatabase()
 		}
+		return this.db
 	}
 
-	// Transaction methods
 	async addTransaction(transaction: Omit<Transaction, 'id'>): Promise<number> {
-		try {
-			const result = await this.db.query(
-				`INSERT INTO transactions 
-                (amount, description, type, tags, category, category_color, date)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                RETURNING id`,
-				[
-					transaction.amount,
-					transaction.description,
-					transaction.type,
-					transaction.tags,
-					transaction.category,
-					transaction.categoryColor,
-					Date.now(),
-				],
-			)
+		const db = await this.getDatabase()
+		const result = await db.query(
+			`INSERT INTO transactions 
+            (amount, description, type, tags, category, category_color, date)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id`,
+			[
+				transaction.amount,
+				transaction.description,
+				transaction.type,
+				transaction.tags,
+				transaction.category,
+				transaction.categoryColor,
+				Date.now(),
+			],
+		)
 
-			// Type assertion to handle potential unknown result
-			const rows = result.rows as { id: number }[]
-			return rows[0].id
-		} catch (error) {
-			console.error('Failed to add transaction:', error)
-			throw new Error('Failed to add transaction')
-		}
+		return (result.rows[0] as { id: number }).id
 	}
 
 	async getTransactions(): Promise<Transaction[]> {
-		try {
-			const result = await this.db.query('SELECT * FROM transactions ORDER BY date DESC')
+		const db = await this.getDatabase()
+		const result = await db.query('SELECT * FROM transactions ORDER BY date DESC')
 
-			// Type assertion for rows
-			const rows = result.rows as Array<Record<string, unknown>>
-			return rows.map(this.mapTransaction)
-		} catch (error) {
-			console.error('Failed to get transactions:', error)
-			throw new Error('Failed to get transactions')
-		}
+		return (result.rows as TransactionRow[]).map(this.mapTransaction)
 	}
 
 	async deleteTransaction(id: number): Promise<void> {
-		try {
-			await this.db.query('DELETE FROM transactions WHERE id = $1', [id])
-		} catch (error) {
-			console.error('Failed to delete transaction:', error)
-			throw new Error('Failed to delete transaction')
-		}
+		const db = await this.getDatabase()
+		await db.query('DELETE FROM transactions WHERE id = $1', [id])
 	}
 
-	// Tag methods
 	async addTag(tag: Omit<Tag, 'id'>): Promise<number> {
-		try {
-			const result = await this.db.query(
-				'INSERT INTO tags (name, color, type) VALUES ($1, $2, $3) RETURNING id',
-				[tag.name, tag.color, tag.type],
-			)
+		const db = await this.getDatabase()
+		const result = await db.query(
+			'INSERT INTO tags (name, color, type) VALUES ($1, $2, $3) RETURNING id',
+			[tag.name, tag.color, tag.type],
+		)
 
-			// Type assertion to handle potential unknown result
-			const rows = result.rows as { id: number }[]
-			return rows[0].id
-		} catch (error) {
-			console.error('Failed to add tag:', error)
-			throw new Error('Failed to add tag')
-		}
+		return (result.rows[0] as { id: number }).id
 	}
 
 	async getTags(): Promise<Tag[]> {
-		try {
-			const result = await this.db.query('SELECT * FROM tags')
+		const db = await this.getDatabase()
+		const result = await db.query('SELECT * FROM tags')
 
-			// Type assertion for rows
-			const rows = result.rows as Array<Record<string, unknown>>
-			return rows.map(this.mapTag)
-		} catch (error) {
-			console.error('Failed to get tags:', error)
-			throw new Error('Failed to get tags')
-		}
+		return (result.rows as TagRow[]).map(this.mapTag)
 	}
 
 	async deleteTag(id: number): Promise<void> {
-		try {
-			// Use a transaction to remove tag from transactions and delete the tag
-			await this.db.query(
-				`
-                WITH tag_removal AS (
-                    UPDATE transactions 
-                    SET tags = array_remove(tags, $1::text)
-                    WHERE $1::text = ANY(tags)
-                )
-                DELETE FROM tags WHERE id = $1
+		const db = await this.getDatabase()
+		await db.query(
+			`
+            WITH tag_removal AS (
+                UPDATE transactions 
+                SET tags = array_remove(tags, $1::text)
+                WHERE $1::text = ANY(tags)
+            )
+            DELETE FROM tags WHERE id = $1
             `,
-				[id.toString()],
-			)
-		} catch (error) {
-			console.error('Failed to delete tag:', error)
-			throw new Error('Failed to delete tag')
-		}
+			[id.toString()],
+		)
 	}
 
-	// Statistics methods
 	async getBalance(): Promise<number> {
-		try {
-			const result = await this.db.query(`
-                SELECT COALESCE(
-                    SUM(CASE 
-                        WHEN type = 'income' THEN amount 
-                        ELSE -amount 
-                    END),
-                    0
-                ) as balance 
-                FROM transactions
-            `)
+		const db = await this.getDatabase()
+		const result = await db.query(`
+            SELECT COALESCE(
+                SUM(CASE 
+                    WHEN type = 'income' THEN amount 
+                    ELSE -amount 
+                END),
+                0
+            ) as balance 
+            FROM transactions
+        `)
 
-			// Type assertion to handle potential unknown result
-			const rows = result.rows as Array<{ balance: number }>
-			return rows[0].balance
-		} catch (error) {
-			console.error('Failed to get balance:', error)
-			throw new Error('Failed to get balance')
-		}
+		return (result.rows[0] as BalanceRow).balance
 	}
 
-	// Helper methods for mapping database rows to interfaces
-	private mapTransaction(row: Record<string, unknown>): Transaction {
+	private mapTransaction(row: TransactionRow): Transaction {
 		return {
-			id: row.id as number,
-			amount: Number(row.amount),
-			description: row.description as string,
+			id: row.id,
+			amount: row.amount,
+			description: row.description,
 			type: row.type as 'income' | 'expense',
-			tags: row.tags as string[],
-			category: row.category as string,
-			categoryColor: row.category_color as string,
-			date: row.date as number,
+			tags: row.tags,
+			category: row.category,
+			categoryColor: row.category_color,
+			date: row.date,
 		}
 	}
 
-	private mapTag(row: Record<string, unknown>): Tag {
+	private mapTag(row: TagRow): Tag {
 		return {
-			id: row.id as number,
-			name: row.name as string,
-			color: row.color as string,
+			id: row.id,
+			name: row.name,
+			color: row.color,
 			type: row.type as 'income' | 'expense' | 'both',
 		}
 	}
-
-	// Existing database methods...
-	// (addTransaction, getTransactions, etc. remain the same)
 }
 
-// Singleton export
-export const savingsdb = WalletDB.getInstance()
+export const savingsdb = Savings.getInstance()

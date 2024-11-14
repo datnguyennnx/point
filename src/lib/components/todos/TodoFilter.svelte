@@ -29,12 +29,6 @@ async function fetchStats() {
 	}
 }
 
-// Function to handle filter change
-function handleFilterChange(newFilter: 'all' | 'active' | 'completed') {
-	console.log('Filter change in TodoFilter:', newFilter)
-	props.onFilterChange(newFilter)
-}
-
 // Initial fetch
 fetchStats()
 
@@ -48,6 +42,12 @@ $effect(() => {
 		unsubscribe()
 	}
 })
+
+// Function to handle filter change
+function handleFilterChange(newFilter: 'all' | 'active' | 'completed') {
+	console.log('Filter change in TodoFilter:', newFilter)
+	props.onFilterChange(newFilter)
+}
 </script>
 
 <div class="flex space-x-2">

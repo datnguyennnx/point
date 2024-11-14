@@ -1,4 +1,5 @@
-import { PGlite } from '@electric-sql/pglite'
+import { databaseManager } from './database'
+import type { PGlite } from '@electric-sql/pglite'
 
 // Todo type definition
 export interface Todo {
@@ -8,7 +9,6 @@ export interface Todo {
 	createdAt: number
 }
 
-// Precise interfaces for database interactions
 interface TodoRow {
 	id: number
 	text: string
@@ -16,248 +16,129 @@ interface TodoRow {
 	created_at: number
 }
 
-interface StatsQueryRow {
+interface TodoStats {
 	total: number
 	completed: number
 	active: number
 }
 
-interface QueryResult<T> {
-	rows: T[]
-}
-
-export class TodoDB {
-	private static instance: TodoDB
-	private db: PGlite
-	private initialized: boolean = false
+export class Todos {
+	private static instance: Todos
 	private changeListeners: Set<() => void> = new Set()
+	private db: PGlite | null = null
 
-	private constructor() {
-		this.db = new PGlite('idb://TodoDatabase')
-	}
+	private constructor() {}
 
-	public static getInstance(): TodoDB {
-		if (!TodoDB.instance) {
-			TodoDB.instance = new TodoDB()
+	public static getInstance(): Todos {
+		if (!Todos.instance) {
+			Todos.instance = new Todos()
 		}
-		return TodoDB.instance
+		return Todos.instance
 	}
 
-	/**
-	 * Register a change listener
-	 */
+	private async getDatabase() {
+		if (!this.db) {
+			this.db = await databaseManager.getDatabase()
+		}
+		return this.db
+	}
+
 	onChange(callback: () => void): () => void {
 		this.changeListeners.add(callback)
-		return () => {
-			this.changeListeners.delete(callback)
-		}
+		return () => this.changeListeners.delete(callback)
 	}
 
-	/**
-	 * Notify all change listeners
-	 */
 	private notifyChanges() {
 		this.changeListeners.forEach((listener) => listener())
 	}
 
-	/**
-	 * Initialize the database
-	 */
-	async init(): Promise<void> {
-		if (this.initialized) return
-
-		try {
-			await this.db.exec(`
-                CREATE TABLE IF NOT EXISTS todos (
-                    id SERIAL PRIMARY KEY,
-                    text TEXT NOT NULL,
-                    completed BOOLEAN DEFAULT false,
-                    created_at BIGINT NOT NULL
-                );
-            `)
-
-			this.initialized = true
-		} catch (error) {
-			console.error('Failed to initialize database:', error)
-			this.initialized = false
-			throw error
-		}
-	}
-
-	/**
-	 * Add a new todo item
-	 */
 	async addTodo(text: string): Promise<number> {
-		try {
-			const result = (await this.db.query(
-				'INSERT INTO todos (text, completed, created_at) VALUES ($1, $2, $3) RETURNING id',
-				[text.trim(), false, Date.now()],
-			)) as QueryResult<{ id: number }>
+		const db = await this.getDatabase()
+		const result = await db.query(
+			'INSERT INTO todos (text, completed, created_at) VALUES ($1, $2, $3) RETURNING id',
+			[text.trim(), false, Date.now()],
+		)
 
-			if (!result.rows || result.rows.length === 0) {
-				throw new Error('No rows returned from insert')
-			}
-
-			const id = result.rows[0].id
-			this.notifyChanges()
-			return id
-		} catch (error) {
-			console.error('Failed to add todo:', error)
-			throw new Error('Failed to add todo')
-		}
+		this.notifyChanges()
+		return (result.rows[0] as { id: number }).id
 	}
 
-	/**
-	 * Get todo statistics
-	 */
-	async getTodoStats(): Promise<StatsQueryRow> {
-		try {
-			const result = (await this.db.query(`
-                SELECT 
-                    COUNT(*) as total,
-                    COUNT(CASE WHEN completed THEN 1 END) as completed,
-                    COUNT(CASE WHEN NOT completed THEN 1 END) as active
-                FROM todos
-            `)) as QueryResult<StatsQueryRow>
+	async getTodoStats(): Promise<TodoStats> {
+		const db = await this.getDatabase()
+		const result = await db.query(`
+			SELECT 
+				COUNT(*) as total,
+				COUNT(CASE WHEN completed THEN 1 END) as completed,
+				COUNT(CASE WHEN NOT completed THEN 1 END) as active
+			FROM todos
+		`)
 
-			if (!result.rows || result.rows.length === 0) {
-				return { total: 0, completed: 0, active: 0 }
-			}
-
-			return result.rows[0]
-		} catch (error) {
-			console.error('Failed to get todo stats:', error)
-			throw new Error('Failed to get todo stats')
-		}
+		const row = result.rows[0] as TodoStats
+		return row || { total: 0, completed: 0, active: 0 }
 	}
 
-	/**
-	 * Get all todos
-	 */
 	async getTodos(): Promise<Todo[]> {
-		try {
-			const result = (await this.db.query(
-				'SELECT * FROM todos ORDER BY created_at DESC',
-			)) as QueryResult<TodoRow>
+		const db = await this.getDatabase()
+		const result = await db.query('SELECT * FROM todos ORDER BY created_at DESC')
 
-			return result.rows.map(this.mapTodoSafely)
-		} catch (error) {
-			console.error('Failed to get todos:', error)
-			throw new Error('Failed to get todos')
-		}
-	}
-
-	/**
-	 * Get filtered todos based on completion status
-	 */
-	async getFilteredTodos(filter: 'all' | 'active' | 'completed'): Promise<Todo[]> {
-		try {
-			console.log(`Fetching todos with filter: ${filter}`)
-
-			if (filter === 'all') {
-				const allTodos = await this.getTodos()
-				console.log('All todos:', allTodos)
-				return allTodos
-			}
-
-			const result = (await this.db.query(
-				'SELECT * FROM todos WHERE completed = $1 ORDER BY created_at DESC',
-				[filter === 'completed'],
-			)) as QueryResult<TodoRow>
-
-			const filteredTodos = result.rows.map(this.mapTodoSafely)
-			console.log(`${filter} todos:`, filteredTodos)
-
-			return filteredTodos
-		} catch (error) {
-			console.error('Failed to get filtered todos:', error)
-			throw new Error('Failed to get filtered todos')
-		}
-	}
-
-	/**
-	 * Safely map a database row to Todo type
-	 */
-	private mapTodoSafely(row: TodoRow): Todo {
-		return {
+		return (result.rows as TodoRow[]).map((row) => ({
 			id: row.id,
 			text: row.text,
 			completed: row.completed,
 			createdAt: row.created_at,
-		}
+		}))
 	}
 
-	/**
-	 * Toggle the completed status of a todo
-	 */
+	async getFilteredTodos(filter: 'all' | 'active' | 'completed'): Promise<Todo[]> {
+		if (filter === 'all') return this.getTodos()
+
+		const db = await this.getDatabase()
+		const result = await db.query(
+			'SELECT * FROM todos WHERE completed = $1 ORDER BY created_at DESC',
+			[filter === 'completed'],
+		)
+
+		return (result.rows as TodoRow[]).map((row) => ({
+			id: row.id,
+			text: row.text,
+			completed: row.completed,
+			createdAt: row.created_at,
+		}))
+	}
+
 	async toggleTodo(id: number): Promise<void> {
-		try {
-			await this.db.query('UPDATE todos SET completed = NOT completed WHERE id = $1', [id])
-			this.notifyChanges()
-		} catch (error) {
-			console.error('Failed to toggle todo:', error)
-			throw new Error('Failed to toggle todo')
-		}
+		const db = await this.getDatabase()
+		await db.query('UPDATE todos SET completed = NOT completed WHERE id = $1', [id])
+		this.notifyChanges()
 	}
 
-	/**
-	 * Delete a todo item
-	 */
 	async deleteTodo(id: number): Promise<void> {
-		try {
-			await this.db.query('DELETE FROM todos WHERE id = $1', [id])
-			this.notifyChanges()
-		} catch (error) {
-			console.error('Failed to delete todo:', error)
-			throw new Error('Failed to delete todo')
-		}
+		const db = await this.getDatabase()
+		await db.query('DELETE FROM todos WHERE id = $1', [id])
+		this.notifyChanges()
 	}
 
-	/**
-	 * Update a todo's text
-	 */
 	async updateTodoText(id: number, text: string): Promise<void> {
-		try {
-			const trimmedText = text.trim()
-			if (!trimmedText) throw new Error('Todo text cannot be empty')
+		const trimmedText = text.trim()
+		if (!trimmedText) throw new Error('Todo text cannot be empty')
 
-			await this.db.query('UPDATE todos SET text = $1 WHERE id = $2', [trimmedText, id])
-			this.notifyChanges()
-		} catch (error) {
-			console.error('Failed to update todo text:', error)
-			throw new Error('Failed to update todo text')
-		}
+		const db = await this.getDatabase()
+		await db.query('UPDATE todos SET text = $1 WHERE id = $2', [trimmedText, id])
+		this.notifyChanges()
 	}
 
-	/**
-	 * Delete all completed todos
-	 */
 	async clearCompletedTodos(): Promise<number> {
-		try {
-			const result = (await this.db.query(
-				'DELETE FROM todos WHERE completed = true RETURNING id',
-			)) as QueryResult<{ id: number }>
-
-			this.notifyChanges()
-			return result.rows.length
-		} catch (error) {
-			console.error('Failed to clear completed todos:', error)
-			throw new Error('Failed to clear completed todos')
-		}
+		const db = await this.getDatabase()
+		const result = await db.query('DELETE FROM todos WHERE completed = true RETURNING id')
+		this.notifyChanges()
+		return result.rows.length
 	}
 
-	/**
-	 * Mark all todos as completed or active
-	 */
 	async toggleAllTodos(completed: boolean): Promise<void> {
-		try {
-			await this.db.query('UPDATE todos SET completed = $1', [completed])
-			this.notifyChanges()
-		} catch (error) {
-			console.error('Failed to toggle all todos:', error)
-			throw new Error('Failed to toggle all todos')
-		}
+		const db = await this.getDatabase()
+		await db.query('UPDATE todos SET completed = $1', [completed])
+		this.notifyChanges()
 	}
 }
-// Singleton export
-export const tododb = TodoDB.getInstance()
+
+export const tododb = Todos.getInstance()

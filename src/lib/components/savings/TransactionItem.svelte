@@ -1,10 +1,10 @@
 <script lang="ts">
-import type { Transaction } from '$lib/database'
 import { Button } from '$lib/components/ui/button'
 import { Trash2 } from 'lucide-svelte'
 import { formatCurrency } from '$lib/utils/currency'
 import { hexToRGBA } from '$lib/utils/color'
-import CategoryIcon from '$lib/components/savings/CategoryIcon.svelte'
+import CategoryIcon from './CategoryIcon.svelte'
+import type { Transaction } from '$lib/database/saving-db'
 
 let { transaction, onDelete } = $props<{
 	transaction: Transaction

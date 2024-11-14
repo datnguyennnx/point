@@ -16,7 +16,6 @@ async function addTodo() {
 			newTodoText = ''
 		} catch (error) {
 			console.error('Failed to add todo:', error)
-			// Optionally, you could add error handling UI here
 		}
 	}
 }

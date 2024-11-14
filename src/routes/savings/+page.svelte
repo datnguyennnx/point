@@ -66,7 +66,7 @@ $effect(() => {
 				</div>
 			</div>
 
-			<TransactionInput />
+			<TransactionInput onTransactionAdded={() => loadStats()} />
 			<TransactionList filter={filter} />
 		</Card.Content>
 	</Card.Root>

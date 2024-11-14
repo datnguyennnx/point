@@ -1,2 +1,3 @@
-export * from './todo-db'
-export * from './saving-db'
+export { DatabaseManager, databaseManager } from './database'
+export { tododb } from './todo-db'
+export { savingsdb } from './saving-db'

@@ -13,6 +13,8 @@ let selectedTags = $state<string[]>([])
 let selectedCategory = $state(CATEGORIES[0].value)
 let categoryColor = $state(CATEGORIES[0].defaultColor)
 
+let { onTransactionAdded } = $props<{ onTransactionAdded: () => void }>() // Updated prop definition
+
 function handleCategoryChange(value: string) {
 	selectedCategory = value
 	const newCategory = CATEGORIES.find((c) => c.value === value)
@@ -34,6 +36,9 @@ async function addTransaction() {
 			date: Date.now(),
 		}
 		await savingsdb.addTransaction(transactionData)
+
+		// Notify parent component to reload transactions
+		onTransactionAdded()
 
 		// Reset form
 		amount = ''
