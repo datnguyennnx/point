@@ -12,13 +12,6 @@ export interface Transaction {
 	date: number
 }
 
-export interface Tag {
-	id?: number
-	name: string
-	color: string
-	type: 'income' | 'expense' | 'both'
-}
-
 interface TransactionRow {
 	id: number
 	amount: number
@@ -30,19 +23,13 @@ interface TransactionRow {
 	date: number
 }
 
-interface TagRow {
-	id: number
-	name: string
-	color: string
-	type: string
-}
-
 interface BalanceRow {
 	balance: number
 }
 
 export class Savings {
 	private static instance: Savings
+	private changeListeners: Set<() => void> = new Set()
 	private db: PGlite | null = null
 
 	private constructor() {}
@@ -59,6 +46,15 @@ export class Savings {
 			this.db = await databaseManager.getDatabase()
 		}
 		return this.db
+	}
+
+	onChange(callback: () => void): () => void {
+		this.changeListeners.add(callback)
+		return () => this.changeListeners.delete(callback)
+	}
+
+	private notifyChanges() {
+		this.changeListeners.forEach((listener) => listener())
 	}
 
 	async addTransaction(transaction: Omit<Transaction, 'id'>): Promise<number> {
@@ -79,6 +75,7 @@ export class Savings {
 			],
 		)
 
+		this.notifyChanges()
 		return (result.rows[0] as { id: number }).id
 	}
 
@@ -92,38 +89,7 @@ export class Savings {
 	async deleteTransaction(id: number): Promise<void> {
 		const db = await this.getDatabase()
 		await db.query('DELETE FROM transactions WHERE id = $1', [id])
-	}
-
-	async addTag(tag: Omit<Tag, 'id'>): Promise<number> {
-		const db = await this.getDatabase()
-		const result = await db.query(
-			'INSERT INTO tags (name, color, type) VALUES ($1, $2, $3) RETURNING id',
-			[tag.name, tag.color, tag.type],
-		)
-
-		return (result.rows[0] as { id: number }).id
-	}
-
-	async getTags(): Promise<Tag[]> {
-		const db = await this.getDatabase()
-		const result = await db.query('SELECT * FROM tags')
-
-		return (result.rows as TagRow[]).map(this.mapTag)
-	}
-
-	async deleteTag(id: number): Promise<void> {
-		const db = await this.getDatabase()
-		await db.query(
-			`
-            WITH tag_removal AS (
-                UPDATE transactions 
-                SET tags = array_remove(tags, $1::text)
-                WHERE $1::text = ANY(tags)
-            )
-            DELETE FROM tags WHERE id = $1
-            `,
-			[id.toString()],
-		)
+		this.notifyChanges()
 	}
 
 	async getBalance(): Promise<number> {
@@ -152,15 +118,6 @@ export class Savings {
 			category: row.category,
 			categoryColor: row.category_color,
 			date: row.date,
-		}
-	}
-
-	private mapTag(row: TagRow): Tag {
-		return {
-			id: row.id,
-			name: row.name,
-			color: row.color,
-			type: row.type as 'income' | 'expense' | 'both',
 		}
 	}
 }

@@ -12,10 +12,8 @@ let transactions = $state<Transaction[]>([])
 async function loadTransactions() {
 	try {
 		const allTransactions = await savingsdb.getTransactions()
-		console.log('All Transactions:', allTransactions) // Log the raw transactions
 		transactions =
 			filter === 'all' ? allTransactions : allTransactions.filter((t) => t.type === filter)
-		console.log('Filtered Transactions:', transactions) // Log the filtered transactions
 	} catch (error) {
 		console.error('Failed to load transactions:', error)
 		transactions = []
@@ -25,22 +23,19 @@ async function loadTransactions() {
 async function handleDelete(id: number) {
 	try {
 		await savingsdb.deleteTransaction(id)
-		// Reload transactions after deletion
 		await loadTransactions()
 	} catch (error) {
 		console.error('Failed to delete transaction:', error)
 	}
 }
 
-// Initial load
+// Load transactions on component mount
 $effect(() => {
 	loadTransactions()
 })
 
-// Reload when filter changes
-$effect(() => {
-	loadTransactions()
-})
+// Listen for changes in the database
+savingsdb.onChange(loadTransactions)
 </script>
 
 <div class="space-y-4">

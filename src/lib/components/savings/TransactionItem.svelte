@@ -11,7 +11,7 @@ let { transaction, onDelete } = $props<{
 	onDelete: (id: number) => void
 }>()
 
-let backgroundColor = $derived(hexToRGBA(transaction.categoryColor, 0.2))
+let backgroundColor = hexToRGBA(transaction.categoryColor, 0.2)
 
 function capitalizeFirstLetter(val: string) {
 	return String(val).charAt(0).toUpperCase() + String(val).slice(1)

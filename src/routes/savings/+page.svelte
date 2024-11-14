@@ -5,8 +5,7 @@ import { savingsdb } from '$lib/database'
 import TransactionInput from '$lib/components/savings/TransactionInput.svelte'
 import TransactionList from '$lib/components/savings/TransactionList.svelte'
 
-let filter = $state<'all' | 'income' | 'expense'>('all')
-
+let filter: 'all' | 'income' | 'expense' = 'all'
 let stats = $state({
 	balance: 0,
 	totalIncome: 0,
@@ -21,20 +20,23 @@ async function loadStats() {
 			balance,
 			totalIncome: transactions
 				.filter((t) => t.type === 'income')
-				.reduce((acc, curr) => acc + curr.amount, 0),
+				.reduce((acc, curr) => acc + Number(curr.amount), 0),
 			totalExpense: transactions
 				.filter((t) => t.type === 'expense')
-				.reduce((acc, curr) => acc + curr.amount, 0),
+				.reduce((acc, curr) => acc + Number(curr.amount), 0),
 		}
 	} catch (error) {
 		console.error('Failed to load stats:', error)
 	}
 }
 
-// Initial load
+// Load stats on component mount
 $effect(() => {
 	loadStats()
 })
+
+// Listen for changes in the database
+savingsdb.onChange(loadStats)
 </script>
 
 <Canvas>
@@ -66,7 +68,7 @@ $effect(() => {
 				</div>
 			</div>
 
-			<TransactionInput onTransactionAdded={() => loadStats()} />
+			<TransactionInput onTransactionAdded={loadStats} />
 			<TransactionList filter={filter} />
 		</Card.Content>
 	</Card.Root>
