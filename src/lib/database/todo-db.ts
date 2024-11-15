@@ -5,6 +5,7 @@ import type { PGlite } from '@electric-sql/pglite'
 export interface Todo {
 	id?: number
 	text: string
+	description?: string // Added optional description
 	completed: boolean
 	createdAt: number
 }
@@ -12,6 +13,7 @@ export interface Todo {
 interface TodoRow {
 	id: number
 	text: string
+	description?: string // Added optional description
 	completed: boolean
 	created_at: number
 }
@@ -52,11 +54,11 @@ export class Todos {
 		this.changeListeners.forEach((listener) => listener())
 	}
 
-	async addTodo(text: string): Promise<number> {
+	async addTodo(text: string, description?: string): Promise<number> {
 		const db = await this.getDatabase()
 		const result = await db.query(
-			'INSERT INTO todos (text, completed, created_at) VALUES ($1, $2, $3) RETURNING id',
-			[text.trim(), false, Date.now()],
+			'INSERT INTO todos (text, description, completed, created_at) VALUES ($1, $2, $3, $4) RETURNING id',
+			[text.trim(), description?.trim() || null, false, Date.now()],
 		)
 
 		this.notifyChanges()
@@ -84,6 +86,7 @@ export class Todos {
 		return (result.rows as TodoRow[]).map((row) => ({
 			id: row.id,
 			text: row.text,
+			description: row.description,
 			completed: row.completed,
 			createdAt: row.created_at,
 		}))
@@ -101,6 +104,7 @@ export class Todos {
 		return (result.rows as TodoRow[]).map((row) => ({
 			id: row.id,
 			text: row.text,
+			description: row.description,
 			completed: row.completed,
 			createdAt: row.created_at,
 		}))
@@ -118,12 +122,16 @@ export class Todos {
 		this.notifyChanges()
 	}
 
-	async updateTodoText(id: number, text: string): Promise<void> {
+	async updateTodoText(id: number, text: string, description?: string): Promise<void> {
 		const trimmedText = text.trim()
 		if (!trimmedText) throw new Error('Todo text cannot be empty')
 
 		const db = await this.getDatabase()
-		await db.query('UPDATE todos SET text = $1 WHERE id = $2', [trimmedText, id])
+		await db.query('UPDATE todos SET text = $1, description = $2 WHERE id = $3', [
+			trimmedText,
+			description?.trim() || null,
+			id,
+		])
 		this.notifyChanges()
 	}
 

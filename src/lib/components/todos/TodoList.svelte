@@ -1,5 +1,5 @@
 <script lang="ts">
-import { tododb } from '$lib/database'
+import { tododb } from '$lib/database/todo-db'
 import TodoItem from './TodoItem.svelte'
 import type { Todo } from '$lib/database/todo-db'
 

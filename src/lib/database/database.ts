@@ -45,6 +45,7 @@ export class DatabaseManager {
             CREATE TABLE IF NOT EXISTS todos (
                 id SERIAL PRIMARY KEY,
                 text TEXT NOT NULL,
+                description TEXT,
                 completed BOOLEAN DEFAULT false,
                 created_at BIGINT NOT NULL
             );

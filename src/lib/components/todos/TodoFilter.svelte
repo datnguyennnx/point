@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
-import { tododb } from '$lib/database'
+import { tododb } from '$lib/database/todo-db'
 
 // Define props with explicit type
 const props = $props<{
@@ -45,7 +45,6 @@ $effect(() => {
 
 // Function to handle filter change
 function handleFilterChange(newFilter: 'all' | 'active' | 'completed') {
-	console.log('Filter change in TodoFilter:', newFilter)
 	props.onFilterChange(newFilter)
 }
 </script>
