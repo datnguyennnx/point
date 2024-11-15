@@ -124,8 +124,8 @@ $effect(() => {
 {#if $page.url.pathname === '/todos' && !$page.url.searchParams.has('table')}
 	<Canvas>
 		<Card.Root>
-			<Card.Header class="flex items-center justify-between">
-				<div class="flex items-center space-x-2">
+			<Card.Header>
+				<div class="flex items-center justify-between">
 					<Card.Title>Todo List</Card.Title>
 					<Button
 						variant="outline"
