@@ -2,7 +2,9 @@ This project is a local-first software application designed to prioritize user p
 
 ![](/assets/Preview.jpeg)
 
-## Features
+## What's Behind the Application
+
+This application leverages Svelte 5 for its reactivity and performance, and shadcn-svelte as the primary UI library for a modern and accessible design.
 
 - **Local Data Storage**: Utilizes `PGlite` to manage data locally, enhancing privacy and performance.
 - **Offline First**: The application is designed to function without an internet connection, providing a seamless user experience.
@@ -30,6 +32,12 @@ pnpm dev
 
 Ensure that you have the necessary environment set up for local development.
 
-## License
+## Contributing
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+### Reporting Issues
+
+If you encounter any issues or bugs, please open an issue on the [GitHub repository](https://github.com/datnguyennnx/toolkits/issues).
+
+### Requesting New Features
+
+If you have ideas for new features or improvements, please open an issue on the [GitHub repository](https://github.com/datnguyennnx/toolkits/issues) with a detailed description of your suggestion.
