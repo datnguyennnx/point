@@ -146,19 +146,28 @@ async function updateTodoDescription() {
 						<Table.Cell>
 							<Checkbox checked={todo.completed} onCheckedChange={() => toggleTodo(todo.id!)} />
 						</Table.Cell>
-						<Table.Cell>{todo.text}</Table.Cell>
-						<Table.Cell class="flex flex-row items-center text-gray-500">
-							{todo.description || '-'}
-							<Button variant="ghost" size="icon" class="ml-2" onclick={() => openEditDialog(todo)}>
+						<Table.Cell class="max-w-[250px]">
+							<p class="truncate">{todo.text}</p>
+						</Table.Cell>
+						<Table.Cell class="flex  max-w-[550px] flex-row items-center text-gray-500">
+							<p class="mr-2 flex-1 truncate">{todo.description || '-'}</p>
+							<Button
+								variant="ghost"
+								size="icon"
+								class="shrink-0"
+								onclick={() => openEditDialog(todo)}
+							>
 								<Edit class="h-4 w-4" />
 							</Button>
 						</Table.Cell>
-						<Table.Cell>
-							<Badge class="text-right" variant={todo.completed ? 'success' : 'warning'}>
+						<Table.Cell class="text-right">
+							<Badge variant={todo.completed ? 'success' : 'warning'}>
 								{todo.completed ? 'Completed' : 'Pending'}
 							</Badge>
 						</Table.Cell>
-						<Table.Cell class="text-right">{new Date(todo.createdAt).toLocaleString()}</Table.Cell>
+						<Table.Cell class="max-w-[120px] text-right">
+							<p class="truncate">{new Date(todo.createdAt).toLocaleString()}</p>
+						</Table.Cell>
 						<Table.Cell class="text-right">
 							<Dialog.Root>
 								<Dialog.Trigger class="rounded-md bg-red-500 p-2 text-white">Remove</Dialog.Trigger>
@@ -181,7 +190,7 @@ async function updateTodoDescription() {
 			</Table.Body>
 			<Table.Footer>
 				<Table.Row>
-					<Table.Cell colspan={7}>
+					<Table.Cell colspan={7} class="bg-white">
 						<Dialog.Root bind:open={isDialogOpen}>
 							<Dialog.Trigger class="w-full">
 								<Button variant="outline" class="w-full">

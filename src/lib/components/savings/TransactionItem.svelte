@@ -50,6 +50,11 @@ let displayProps = $derived.by(() => {
 				{displayProps.category}
 			</p>
 		</div>
+		<div class="flex w-full min-w-0 flex-col sm:flex-row sm:items-center sm:space-x-4">
+			<p class="w-full min-w-0 truncate pr-2 font-medium" data-category="true">
+				{transaction.description}
+			</p>
+		</div>
 	</div>
 	<div class="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end">
 		<div

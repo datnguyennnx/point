@@ -44,15 +44,15 @@ let formattedDate = $derived(formatDate(todo.createdAt))
 </script>
 
 <div class="flex items-center justify-between rounded-md border p-3">
-	<div class="flex items-center space-x-2">
+	<div class="flex min-w-0 flex-1 items-center space-x-2">
 		<Button variant="ghost" size="icon" onclick={handleToggle}>
 			<CheckIcon class={displayProps.checkIconClass} />
 		</Button>
-		<div class="flex min-w-0 flex-col">
-			<p class={displayProps.textClass}>
+		<div class="flex min-w-0 flex-1 flex-col">
+			<p class={`${displayProps.textClass} w-full min-w-0`}>
 				{todo.text}
 			</p>
-			<p class="truncate text-xs text-muted-foreground">
+			<p class="w-full min-w-0 truncate text-xs text-muted-foreground">
 				{formattedDate}
 			</p>
 		</div>
