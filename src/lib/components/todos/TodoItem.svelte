@@ -40,12 +40,16 @@ async function handleDelete() {
 			<CheckIcon class={props.todo.completed ? 'text-green-500' : 'text-muted-foreground'} />
 		</Button>
 		<div class="flex flex-col">
-			<span class={props.todo.completed ? 'text-muted-foreground line-through' : ''}>
+			<p
+				class={props.todo.completed
+					? 'text-muted-foreground line-through'
+					: 'overflow-hidden text-ellipsis'}
+			>
 				{props.todo.text}
-			</span>
-			<span class="text-xs text-muted-foreground">
+			</p>
+			<p class="text-xs text-muted-foreground">
 				{formatDate(props.todo.createdAt)}
-			</span>
+			</p>
 		</div>
 	</div>
 	<Button variant="ghost" size="icon" onclick={handleDelete}>
