@@ -9,6 +9,9 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'error.html',
 			runtime: 'nodejs20.x',
 		}),
 	},
