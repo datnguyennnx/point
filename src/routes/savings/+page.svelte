@@ -2,6 +2,7 @@
 import * as Card from '$lib/components/ui/card'
 import Canvas from '$lib/components/common/Canvas/Canvas.svelte'
 import { savingsdb } from '$lib/database'
+import { formatCurrency, compactNumber } from '$lib/utils/currency'
 import TransactionInput from '$lib/components/savings/TransactionInput.svelte'
 import TransactionList from '$lib/components/savings/TransactionList.svelte'
 
@@ -30,6 +31,16 @@ async function loadStats() {
 	}
 }
 
+// Derived formatted stats
+let formattedStats = $derived({
+	balance: formatCurrency(stats.balance),
+	totalIncome: formatCurrency(stats.totalIncome),
+	totalExpense: formatCurrency(stats.totalExpense),
+	compactBalance: compactNumber(stats.balance),
+	compactIncome: compactNumber(stats.totalIncome),
+	compactExpense: compactNumber(stats.totalExpense),
+})
+
 // Load stats on component mount
 $effect(() => {
 	loadStats()
@@ -50,20 +61,20 @@ savingsdb.onChange(loadStats)
 			<div class="grid grid-cols-3 gap-4">
 				<div class="text-center">
 					<div class="text-sm text-muted-foreground">Balance</div>
-					<div class="text-2xl font-bold">
-						${stats.balance}
+					<div class="text-2xl font-bold" title={formattedStats.balance}>
+						{formattedStats.compactBalance}
 					</div>
 				</div>
 				<div class="text-center">
 					<div class="text-sm text-muted-foreground">Income</div>
-					<div class="text-2xl font-bold text-green-500">
-						${stats.totalIncome}
+					<div class="text-2xl font-bold text-green-500" title={formattedStats.totalIncome}>
+						{formattedStats.compactIncome}
 					</div>
 				</div>
 				<div class="text-center">
 					<div class="text-sm text-muted-foreground">Expenses</div>
-					<div class="text-2xl font-bold text-red-500">
-						${stats.totalExpense}
+					<div class="text-2xl font-bold text-red-500" title={formattedStats.totalExpense}>
+						{formattedStats.compactExpense}
 					</div>
 				</div>
 			</div>
