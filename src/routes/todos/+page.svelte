@@ -18,7 +18,7 @@ import TodoInput from '$lib/components/todos/TodoInput.svelte'
 import TodoFilter from '$lib/components/todos/TodoFilter.svelte'
 import TodoList from '$lib/components/todos/TodoList.svelte'
 
-// Centralized filter state
+// Centralized state management with Svelte 5 runes
 let filter = $state<'all' | 'active' | 'completed'>('all')
 let databaseReady = $state(false)
 let todos = $state<Todo[]>([])
@@ -40,32 +40,38 @@ function switchToTableView() {
 	goto('/todos?table')
 }
 
-// Function to fetch stats
-async function fetchStats() {
-	if (!databaseReady) return
+// Derived stats using $derived
+let stats = $derived({
+	total: todos.length,
+	completed: todos.filter((todo) => todo.completed).length,
+})
 
-	try {
-		const todoStats = await tododb.getTodoStats()
-		stats = {
-			total: todoStats.total,
-			completed: todoStats.completed,
+// Effect for fetching todos and stats
+$effect(() => {
+	async function initializeTodos() {
+		try {
+			todos = await tododb.getTodos()
+			databaseReady = true
+		} catch (error) {
+			console.error('Failed to initialize todos:', error)
+			todos = []
+			databaseReady = false
 		}
-	} catch (error) {
-		console.error('Failed to fetch todo stats:', error)
 	}
-}
+
+	initializeTodos()
+
+	const unsubscribe = tododb.onChange(initializeTodos)
+	return () => unsubscribe()
+})
 
 // Table-specific functions
 async function toggleTodo(id: number) {
 	await tododb.toggleTodo(id)
-	todos = await tododb.getTodos()
-	await fetchStats()
 }
 
 async function removeTodo(id: number) {
 	await tododb.deleteTodo(id)
-	todos = await tododb.getTodos()
-	await fetchStats()
 }
 
 // Function to open edit dialog
@@ -81,44 +87,12 @@ async function updateTodoDescription() {
 
 	try {
 		await tododb.updateTodoText(currentEditTodo.id!, currentEditTodo.text, editDescription)
-		todos = await tododb.getTodos()
 		isEditDialogOpen = false
 		currentEditTodo = null
 	} catch (error) {
 		console.error('Failed to update todo description:', error)
 	}
 }
-
-// Use $state for stats
-let stats = $state({
-	total: 0,
-	completed: 0,
-})
-
-// Reactive fetch when todos change
-$effect(() => {
-	if (!databaseReady) return
-
-	const unsubscribe = tododb.onChange(async () => {
-		await fetchStats()
-		todos = await tododb.getTodos()
-	})
-
-	return () => {
-		unsubscribe()
-	}
-})
-
-// Fetch todos on mount
-$effect(() => {
-	async function initializeTodos() {
-		const fetchedTodos = await tododb.getTodos()
-		todos = fetchedTodos
-		databaseReady = true
-		await fetchStats()
-	}
-	initializeTodos()
-})
 </script>
 
 {#if $page.url.pathname === '/todos' && !$page.url.searchParams.has('table')}
@@ -159,21 +133,19 @@ $effect(() => {
 			<Table.Header>
 				<Table.Row>
 					<Table.Head class="w-[50px]">Complete</Table.Head>
-					<Table.Head class="w-[100px]">ID</Table.Head>
 					<Table.Head>Task</Table.Head>
 					<Table.Head>Description</Table.Head>
-					<Table.Head>Status</Table.Head>
+					<Table.Head class="text-right">Status</Table.Head>
 					<Table.Head class="text-right">Created At</Table.Head>
 					<Table.Head class="text-right">Actions</Table.Head>
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#each todos as todo, i (i)}
+				{#each todos as todo (todo.id)}
 					<Table.Row>
 						<Table.Cell>
 							<Checkbox checked={todo.completed} onCheckedChange={() => toggleTodo(todo.id!)} />
 						</Table.Cell>
-						<Table.Cell class="font-medium">{todo.id}</Table.Cell>
 						<Table.Cell>{todo.text}</Table.Cell>
 						<Table.Cell class="flex flex-row items-center text-gray-500">
 							{todo.description || '-'}
@@ -182,7 +154,7 @@ $effect(() => {
 							</Button>
 						</Table.Cell>
 						<Table.Cell>
-							<Badge variant={todo.completed ? 'success' : 'warning'}>
+							<Badge class="text-right" variant={todo.completed ? 'success' : 'warning'}>
 								{todo.completed ? 'Completed' : 'Pending'}
 							</Badge>
 						</Table.Cell>

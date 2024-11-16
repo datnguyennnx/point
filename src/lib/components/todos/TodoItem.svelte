@@ -4,51 +4,56 @@ import { CheckIcon, TrashIcon } from 'lucide-svelte'
 import type { Todo } from '$lib/database/todo-db'
 import { formatDate } from '$lib/utils/date'
 
-// Define props with explicit type
-const props = $props<{
+// Props with $props
+let { todo, onToggle, onDelete } = $props<{
 	todo: Todo
 	onToggle: (id: number) => Promise<void>
 	onDelete: (id: number) => Promise<void>
 }>()
 
-// Handle todo toggle
+// Derived display properties
+let displayProps = $derived({
+	checkIconClass: todo.completed ? 'text-green-500' : 'text-muted-foreground',
+	textClass: todo.completed ? 'text-muted-foreground line-through truncate' : 'truncate',
+})
+
+// Handle todo toggle with error handling
 async function handleToggle() {
-	if (props.todo.id) {
+	if (todo.id) {
 		try {
-			await props.onToggle(props.todo.id)
+			await onToggle(todo.id)
 		} catch (error) {
 			console.error('Failed to toggle todo:', error)
 		}
 	}
 }
 
-// Handle todo deletion
+// Handle todo deletion with error handling
 async function handleDelete() {
-	if (props.todo.id) {
+	if (todo.id) {
 		try {
-			await props.onDelete(props.todo.id)
+			await onDelete(todo.id)
 		} catch (error) {
 			console.error('Failed to delete todo:', error)
 		}
 	}
 }
+
+// Derived formatted date
+let formattedDate = $derived(formatDate(todo.createdAt))
 </script>
 
-<div class="flex items-center justify-between rounded-md border bg-card p-3">
+<div class="flex items-center justify-between rounded-md border p-3">
 	<div class="flex items-center space-x-2">
 		<Button variant="ghost" size="icon" onclick={handleToggle}>
-			<CheckIcon class={props.todo.completed ? 'text-green-500' : 'text-muted-foreground'} />
+			<CheckIcon class={displayProps.checkIconClass} />
 		</Button>
-		<div class="flex flex-col">
-			<p
-				class={props.todo.completed
-					? 'text-muted-foreground line-through'
-					: 'overflow-hidden text-ellipsis'}
-			>
-				{props.todo.text}
+		<div class="flex min-w-0 flex-col">
+			<p class={displayProps.textClass}>
+				{todo.text}
 			</p>
-			<p class="text-xs text-muted-foreground">
-				{formatDate(props.todo.createdAt)}
+			<p class="truncate text-xs text-muted-foreground">
+				{formattedDate}
 			</p>
 		</div>
 	</div>

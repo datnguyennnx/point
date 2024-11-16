@@ -3,43 +3,43 @@ import { tododb } from '$lib/database/todo-db'
 import TodoItem from './TodoItem.svelte'
 import type { Todo } from '$lib/database/todo-db'
 
-// Define props with explicit type
-const props = $props<{
+// Props with $props
+let { filter } = $props<{
 	filter: 'all' | 'active' | 'completed'
 }>()
 
 // Reactive todos state
 let todos = $state<Todo[]>([])
 
+// Derived filtered todos
+let filteredTodos = $derived(
+	filter === 'all' ? todos : todos.filter((todo) => todo.completed === (filter === 'completed')),
+)
+
 // Function to fetch todos
 async function fetchTodos() {
 	try {
-		console.log('Fetching todos with filter:', props.filter)
-		todos = await tododb.getFilteredTodos(props.filter)
-		console.log('Fetched todos:', todos)
+		todos = await tododb.getFilteredTodos(filter)
 	} catch (error) {
 		console.error('Failed to fetch todos:', error)
+		todos = []
 	}
 }
 
-// Initial fetch
-fetchTodos()
+// Derived empty state message
+let emptyStateMessage = $derived(
+	filter === 'all'
+		? 'No todos yet'
+		: filter === 'active'
+			? 'No active todos'
+			: 'No completed todos',
+)
 
-// Reactive fetch when filter or todos change
+// Effect for initial load and database changes
 $effect(() => {
-	const unsubscribe = tododb.onChange(() => {
-		fetchTodos()
-	})
-
-	return () => {
-		unsubscribe()
-	}
-})
-
-// Reactive effect to log filter changes
-$effect(() => {
-	console.log('Filter changed to:', props.filter)
 	fetchTodos()
+	const unsubscribe = tododb.onChange(fetchTodos)
+	return () => unsubscribe()
 })
 
 // Handler functions for TodoItem
@@ -53,12 +53,12 @@ async function handleDelete(id: number) {
 </script>
 
 <div class="space-y-2">
-	{#if todos.length === 0}
+	{#if filteredTodos.length === 0}
 		<div class="py-4 text-center text-muted-foreground">
-			No {props.filter} todos to show.
+			{emptyStateMessage}
 		</div>
 	{:else}
-		{#each todos as todo (todo.id)}
+		{#each filteredTodos as todo (todo.id)}
 			<TodoItem todo={todo} onToggle={handleToggle} onDelete={handleDelete} />
 		{/each}
 	{/if}

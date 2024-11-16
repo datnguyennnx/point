@@ -2,73 +2,63 @@
 import { Button } from '$lib/components/ui/button'
 import { tododb } from '$lib/database/todo-db'
 
-// Define props with explicit type
-const props = $props<{
+// Props with $props
+let { filter, onFilterChange } = $props<{
 	filter: 'all' | 'active' | 'completed'
 	onFilterChange: (newFilter: 'all' | 'active' | 'completed') => void
 }>()
 
-// Reactive stats state
+// Reactive stats using $state
 let stats = $state({
 	total: 0,
 	completed: 0,
 	active: 0,
 })
 
-// Function to fetch stats
-async function fetchStats() {
-	try {
-		const todoStats = await tododb.getTodoStats()
-		stats = {
-			total: todoStats.total,
-			completed: todoStats.completed,
-			active: todoStats.active,
-		}
-	} catch (error) {
-		console.error('Failed to fetch todo stats:', error)
-	}
-}
-
-// Initial fetch
-fetchStats()
-
-// Reactive fetch when todos change
-$effect(() => {
-	const unsubscribe = tododb.onChange(() => {
-		fetchStats()
-	})
-
-	return () => {
-		unsubscribe()
-	}
+// Derived stats
+let statsDisplay = $derived({
+	all: `(${stats.total})`,
+	active: `(${stats.active})`,
+	completed: `(${stats.completed})`,
 })
 
-// Function to handle filter change
-function handleFilterChange(newFilter: 'all' | 'active' | 'completed') {
-	props.onFilterChange(newFilter)
-}
+// Effect for fetching stats
+$effect(() => {
+	async function updateStats() {
+		try {
+			stats = await tododb.getTodoStats()
+		} catch (error) {
+			console.error('Failed to fetch todo stats:', error)
+		}
+	}
+
+	updateStats()
+
+	const unsubscribe = tododb.onChange(updateStats)
+	return () => unsubscribe()
+})
 </script>
 
 <div class="flex space-x-2">
 	<Button
-		variant={props.filter === 'all' ? 'default' : 'outline'}
+		variant={filter === 'all' ? 'default' : 'outline'}
 		size="sm"
-		onclick={() => handleFilterChange('all')}
+		onclick={() => onFilterChange('all')}
 	>
-		All ({stats.total})
+		All {statsDisplay.all}
 	</Button>
 	<Button
-		variant={props.filter === 'active' ? 'default' : 'outline'}
+		variant={filter === 'active' ? 'default' : 'outline'}
 		size="sm"
-		onclick={() => handleFilterChange('active')}
+		onclick={() => onFilterChange('active')}
 	>
-		Active ({stats.active})
+		Active {statsDisplay.active}
 	</Button>
 	<Button
-		variant={props.filter === 'completed' ? 'default' : 'outline'}
+		variant={filter === 'completed' ? 'default' : 'outline'}
 		size="sm"
-		onclick={() => handleFilterChange('completed')}
+		onclick={() => onFilterChange('completed')}
 	>
-		Completed ({stats.completed})
+		Completed {statsDisplay.completed}
 	</Button>
 </div>
