@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ChevronUp, Binary, ListChecks, CircleDollarSign } from 'lucide-svelte'
+import { ChevronUp, Binary, ListChecks } from 'lucide-svelte'
 import Settings from '$lib/components/common/Settings/Settings.svelte'
 import * as Sidebar from '$lib/components/ui/sidebar/index.js'
 import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
@@ -16,11 +16,6 @@ const items = [
 		title: 'Todos',
 		url: '/todos',
 		icon: ListChecks,
-	},
-	{
-		title: 'Savings',
-		url: '/savings',
-		icon: CircleDollarSign,
 	},
 ]
 const user = {

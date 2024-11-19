@@ -22,25 +22,6 @@ export class DatabaseManager {
 		this.db = new PGlite('idb://AppDatabase')
 
 		await this.db.exec(`
-            -- Savings Tables
-            CREATE TABLE IF NOT EXISTS transactions (
-                id SERIAL PRIMARY KEY,
-                amount DECIMAL NOT NULL,
-                description TEXT NOT NULL,
-                type TEXT CHECK (type IN ('income', 'expense')),
-                tags TEXT[] DEFAULT '{}',
-                category TEXT NOT NULL,
-                category_color TEXT NOT NULL,
-                date BIGINT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS tags (
-                id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL UNIQUE,
-                color TEXT NOT NULL,
-                type TEXT CHECK (type IN ('income', 'expense', 'both'))
-            );
-
             -- Todos Tables
             CREATE TABLE IF NOT EXISTS todos (
                 id SERIAL PRIMARY KEY,
