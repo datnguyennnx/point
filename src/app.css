@@ -83,3 +83,33 @@
 		scrollbar-width: none;
 	}
 }
+
+@layer components {
+	.prose :where(p):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0.5em;
+		margin-bottom: 0em;
+	}
+	.prose :where(ul):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0.5em;
+		margin-bottom: 0em;
+	}
+	.prose :where(h1):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0em;
+		margin-bottom: 0.25em;
+	}
+
+	.prose :where(h2):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0em;
+		margin-bottom: 0.25em;
+	}
+
+	prose :where(h3):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0em;
+		margin-bottom: 0.25em;
+	}
+}
+
+.highlight-mention {
+	background-color: transparent;
+	color: rgb(168 85 247); /* text-purple-500 */
+}
