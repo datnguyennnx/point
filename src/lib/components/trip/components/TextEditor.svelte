@@ -1,3 +1,12 @@
+<!-- TextEditor.svelte -->
+
+<style>
+:global(.ProseMirror) {
+	width: 100%;
+	min-height: 100px;
+}
+</style>
+
 <script lang="ts">
 import { onMount, onDestroy } from 'svelte'
 import StarterKit from '@tiptap/starter-kit'
@@ -48,7 +57,7 @@ onMount(() => {
 		element: element,
 		editorProps: {
 			attributes: {
-				class: 'prose prose-sm focus:outline-none h-full w-full',
+				class: 'prose focus:outline-none min-w-full',
 			},
 		},
 		extensions: [
@@ -106,10 +115,16 @@ onDestroy(() => {
 </script>
 
 <div bind:this={element}></div>
-<div class="editor-wrapper flex h-full w-full flex-col">
-	{#if editor}
-		<div class="editor-content relative flex-1">
-			<MentionList bind:this={mentionListRef} items={items} command={onMentionCommand} />
+
+<div class="flex h-full w-full flex-col overflow-hidden">
+	<div class="h-full w-full overflow-y-auto">
+		<div class="w-full" bind:this={element}></div>
+		<div class="editor-wrapper w-full">
+			{#if editor}
+				<div class="editor-content w-full">
+					<MentionList bind:this={mentionListRef} items={items} command={onMentionCommand} />
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
 </div>

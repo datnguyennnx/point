@@ -25,14 +25,20 @@ function handleAddMarker(marker: { lngLat: [number, number]; label: string }) {
 </script>
 
 <SplitCanvas>
-	<div slot="left" class="flex-1 rounded-md border p-4">
-		<TextEditor />
+	<div slot="left" class="flex w-1/2 overflow-hidden rounded-md border">
+		<div class="flex w-full flex-col overflow-hidden">
+			<div class="no-scrollbar h-full w-full overflow-y-auto">
+				<div class="w-full p-4">
+					<TextEditor />
+				</div>
+			</div>
+		</div>
 	</div>
-	<div slot="right" class="flex-1 rounded-md border">
+	<div slot="right" class="flex w-1/2 overflow-hidden rounded-md border">
 		<MapLibre
 			center={[108, 17]}
 			zoom={5}
-			class="map h-full"
+			class="h-full w-full"
 			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
 		>
 			<NavigationControl position="top-right" />
