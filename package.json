@@ -69,12 +69,12 @@
 		}
 	},
 	"lint-staged": {
-		"**/*.{json,css,scss,md}": [
+		"**/*.{json,css,scss}": [
 			"prettier --write"
 		],
-		"**/*.{js,jsx,ts,svelte}": [
-			"prettier --write",
-			"eslint --fix"
+		"**/*.{js,ts,svelte}": [
+			"prettier --write .",
+			"eslint --fix ."
 		]
 	}
 }
