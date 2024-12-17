@@ -19,9 +19,10 @@ export const CustomMention = Extension.create({
 			suggestion: {
 				char: '@',
 				command: ({ editor, range, props }: SuggestionCommandProps) => {
+					editor.commands.unsetMark('highlight')
 					if (editor.view) {
 						const { state, dispatch } = editor.view
-						handleMentionCommand(state, dispatch, props as MentionItem)
+						handleMentionCommand(state, dispatch, props as MentionItem, editor)
 					}
 				},
 				items: async ({ query }: { query: string }): Promise<MentionItem[]> => {
@@ -54,35 +55,45 @@ export const CustomMention = Extension.create({
 	},
 })
 
-export function handleMentionCommand(state: EditorState, dispatch: any, item: MentionItem): void {
+export function handleMentionCommand(
+	state: EditorState,
+	dispatch: any,
+	item: MentionItem,
+	editor: Editor,
+): void {
 	if (!state || !dispatch) return
+
+	// Get current selection
 	const { from, to } = state.selection
-	let start = from
+
+	// Find the starting position of the @ symbol
 	const textBefore = state.doc.textBetween(Math.max(0, from - 50), from)
 	const atIndex = textBefore.lastIndexOf('@')
-	if (atIndex > -1) {
-		start = from - (textBefore.length - atIndex)
-	}
+	const start = from - (textBefore.length - atIndex)
 
 	// Create the mention text
 	const mentionText = `@${item.label}`
+	const mentionEnd = start + mentionText.length
 
-	// Create a transaction that first removes any existing marks in the range
-	const tr = state.tr.removeMark(start, to)
-
-	// Delete the existing range and insert the new text
-	tr.deleteRange(start, to).insertText(mentionText, start)
-
-	// Add highlight mark only to the mention text
-	const markType = state.schema.marks.highlight
-	if (markType) {
-		const mark = markType.create()
-		// Only apply mark to the mention text range
-		tr.addMark(start, start + mentionText.length, mark)
-	}
-
+	// Create transaction
+	const tr = state.tr
+	tr.deleteRange(start, to)
+	tr.insertText(mentionText, start)
 	dispatch(tr)
-	item.function?.()
+
+	// Apply highlight only to the mention text and explicitly unset it afterwards
+	editor
+		.chain()
+		.focus()
+		// First highlight the mention
+		.setTextSelection({ from: start, to: mentionEnd })
+		.setHighlight({ color: '#e9d5ff' })
+		// Move cursor after mention
+		.setTextSelection(mentionEnd)
+		// Insert space and explicitly unset highlight for future text
+		.insertContent(' ')
+		.unsetHighlight()
+		.run()
 }
 
 function normalizeSearchTerm(query: string): string {

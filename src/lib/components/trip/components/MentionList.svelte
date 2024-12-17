@@ -1,7 +1,6 @@
 <!-- MentionList.svelte -->
 
 <style>
-/* Optional: Add transition for smoother highlighting */
 span {
 	transition: all 0.1s ease-in-out;
 }

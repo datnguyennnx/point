@@ -27,8 +27,7 @@ let items = $state<MentionItem[]>([])
 function onMentionCommand(item: MentionItem) {
 	if (editor?.view) {
 		const { state, dispatch } = editor.view
-		// Assuming handleMentionCommand is imported from mention-plugin
-		handleMentionCommand(state, dispatch, item)
+		handleMentionCommand(state, dispatch, item, editor) // Pass editor instance
 	}
 }
 
@@ -57,7 +56,7 @@ onMount(() => {
 			Highlight.configure({
 				multicolor: true,
 				HTMLAttributes: {
-					class: 'highlight-mention',
+					class: 'mention-highlight',
 				},
 			}),
 			CustomMention.configure({

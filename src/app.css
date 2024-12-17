@@ -103,13 +103,14 @@
 		margin-bottom: 0.25em;
 	}
 
-	prose :where(h3):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+	.prose :where(h3):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
 		margin-top: 0em;
 		margin-bottom: 0.25em;
 	}
 }
 
-.highlight-mention {
-	background-color: transparent;
-	color: rgb(168 85 247); /* text-purple-500 */
+.mention-highlight {
+	background-color: #e9d5ff;
+	border-radius: 0.25rem;
+	padding: 0.125rem 0.25rem;
 }
