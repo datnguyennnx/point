@@ -1,14 +1,7 @@
 import type { Editor } from '@tiptap/core'
 import type { SelectionRange, EditorState } from '@tiptap/pm/state'
+import type { GeocodeResult } from '../services/types'
 
-export interface GeocodeResult {
-	latitude: number
-	longitude: number
-	formattedAddress?: string
-	confidence?: number
-}
-
-// Remove duplicate MentionItem interface and merge with location
 export interface MentionItem {
 	id: string
 	label: string

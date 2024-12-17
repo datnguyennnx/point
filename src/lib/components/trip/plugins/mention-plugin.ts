@@ -9,26 +9,62 @@ import type {
 	SuggestionCommandProps,
 	SuggestionKeyboardHandlerProps,
 } from '../types/types'
-import { GeocodingService } from '../services/geocoding'
+import { OptimizedGeocodingService } from '../services/geocoding'
 import { debounce } from '../utils/debounce'
+
+interface MentionState {
+	lastQuery: string
+	lastResults: MentionItem[]
+	isSearching: boolean
+}
+
+const mentionState: MentionState = {
+	lastQuery: '',
+	lastResults: [],
+	isSearching: false,
+}
 
 export const CustomMention = Extension.create({
 	name: 'customMention',
+
 	addOptions() {
 		return {
 			suggestion: {
 				char: '@',
 				command: ({ editor, range, props }: SuggestionCommandProps) => {
-					editor.commands.unsetMark('highlight')
 					if (editor.view) {
 						const { state, dispatch } = editor.view
 						handleMentionCommand(state, dispatch, props as MentionItem, editor)
 					}
 				},
 				items: async ({ query }: { query: string }): Promise<MentionItem[]> => {
-					// Allow searching after typing at least 2 characters (including spaces)
-					if (normalizeSearchTerm(query).length < 2) return []
-					return await debouncedLocationSearch(query)
+					const normalizedQuery = normalizeSearchTerm(query)
+
+					// Return cached results if query hasn't changed
+					if (normalizedQuery === mentionState.lastQuery && mentionState.lastResults.length > 0) {
+						return mentionState.lastResults
+					}
+
+					// Minimum query length check
+					if (normalizedQuery.length < 2) {
+						mentionState.lastResults = []
+						return []
+					}
+
+					// Prevent concurrent searches
+					if (mentionState.isSearching) {
+						return mentionState.lastResults
+					}
+
+					try {
+						mentionState.isSearching = true
+						const results = await debouncedLocationSearch(query)
+						mentionState.lastQuery = normalizedQuery
+						mentionState.lastResults = results
+						return results
+					} finally {
+						mentionState.isSearching = false
+					}
 				},
 				keyboardHandler: ({
 					event,
@@ -37,7 +73,9 @@ export const CustomMention = Extension.create({
 					props,
 					state,
 				}: SuggestionKeyboardHandlerProps): boolean => {
-					if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'Enter') {
+					const isNavigationKey = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(event.key)
+					if (isNavigationKey) {
+						event.preventDefault()
 						return true
 					}
 					return false
@@ -45,6 +83,7 @@ export const CustomMention = Extension.create({
 			},
 		}
 	},
+
 	addProseMirrorPlugins() {
 		return [
 			Suggestion({
@@ -63,66 +102,74 @@ export function handleMentionCommand(
 ): void {
 	if (!state || !dispatch) return
 
-	// Get current selection
-	const { from, to } = state.selection
+	try {
+		const { from, to } = state.selection
+		const textBefore = state.doc.textBetween(Math.max(0, from - 50), from)
+		const atIndex = textBefore.lastIndexOf('@')
 
-	// Find the starting position of the @ symbol
-	const textBefore = state.doc.textBetween(Math.max(0, from - 50), from)
-	const atIndex = textBefore.lastIndexOf('@')
-	const start = from - (textBefore.length - atIndex)
+		if (atIndex === -1) return
 
-	// Create the mention text
-	const mentionText = `@${item.label}`
-	const mentionEnd = start + mentionText.length
+		const start = from - (textBefore.length - atIndex)
+		const mentionText = `@${item.label}`
+		const mentionEnd = start + mentionText.length
 
-	// Create transaction
-	const tr = state.tr
-	tr.deleteRange(start, to)
-	tr.insertText(mentionText, start)
-	dispatch(tr)
+		// Create and dispatch transaction
+		const tr = state.tr.deleteRange(start, to).insertText(mentionText, start)
 
-	// Apply highlight only to the mention text and explicitly unset it afterwards
-	editor
-		.chain()
-		.focus()
-		// First highlight the mention
-		.setTextSelection({ from: start, to: mentionEnd })
-		.setHighlight({ color: '#e9d5ff' })
-		// Move cursor after mention
-		.setTextSelection(mentionEnd)
-		// Insert space and explicitly unset highlight for future text
-		.insertContent(' ')
-		.unsetHighlight()
-		.run()
+		dispatch(tr)
+
+		// Apply highlighting and formatting
+		editor
+			.chain()
+			.focus()
+			.setTextSelection({ from: start, to: mentionEnd })
+			.setHighlight({ color: '#e9d5ff' })
+			.setTextSelection(mentionEnd)
+			.insertContent(' ')
+			.unsetHighlight()
+			.run()
+	} catch (error) {
+		console.error('Error handling mention command:', error)
+		// Implement fallback behavior if needed
+	}
 }
 
 function normalizeSearchTerm(query: string): string {
-	return query.toLowerCase().trim().replace(/\s+/g, ' ') // normalize multiple spaces to single space
+	return query.replace('@', '').toLowerCase().trim().replace(/\s+/g, ' ')
 }
 
-export const debouncedLocationSearch = debounce(async (query: string) => {
-	// Remove the @ symbol and normalize the search term
-	const searchTerm = normalizeSearchTerm(query.replace('@', ''))
-
+// Optimized debounced search with error handling and retry logic
+export const debouncedLocationSearch = debounce(async (query: string): Promise<MentionItem[]> => {
+	const searchTerm = normalizeSearchTerm(query)
 	if (!searchTerm) return []
 
 	try {
-		const locations = await GeocodingService.geocode(searchTerm, {
+		const locations = await OptimizedGeocodingService.geocode(searchTerm, {
 			preferredService: 'nominatim',
+			timeout: 3000, // 3 second timeout
 		})
 
 		return locations
-			.filter((location) => location.formattedAddress)
+			.filter((location) => location.formattedAddress && location.confidence > 0.3)
 			.map((location) => ({
 				id: `${location.latitude},${location.longitude}`,
 				label: location.formattedAddress || `${location.latitude}, ${location.longitude}`,
 				location,
+				confidence: location.confidence,
+				metadata: location.metadata,
 				function: () => {
-					console.log('Selected location:', location)
+					handleLocationSelection(location)
 				},
 			}))
+			.sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
+			.slice(0, 5) // Limit to top 5 results
 	} catch (error) {
 		console.error('Location search error:', error)
 		return []
 	}
-}, 100)
+}, 250) // Increased debounce time for better performance
+
+// Helper functions
+function handleLocationSelection(location: any): void {
+	console.log('Selected location:', location)
+}

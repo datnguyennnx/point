@@ -1,60 +1,105 @@
-//geocoding.ts
-export interface GeocodeResult {
-	latitude: number
-	longitude: number
-	formattedAddress?: string
-	confidence?: number
-}
+// services/geocoding.service.ts
+import type { GeocodeResult, GeocodingOptions, CacheEntry, GeocodeError } from './types'
+import { RateLimiter } from './rate-limiter'
+import { Logger } from './logger'
 
-export class GeocodingService {
-	static async nominatimGeocode(query: string): Promise<GeocodeResult[]> {
+export class OptimizedGeocodingService {
+	private static cache = new Map<string, CacheEntry>()
+	private static readonly CACHE_DURATION = 1000 * 60 * 60 // 1 hour
+	private static readonly DEFAULT_TIMEOUT = 5000 // 5 seconds
+	private static readonly MAX_RETRIES = 3
+
+	private static nominatimRateLimiter = new RateLimiter({
+		maxRequests: 1,
+		timeWindow: 1000, // 1 request per second
+	})
+
+	private static googleRateLimiter = new RateLimiter({
+		maxRequests: 50,
+		timeWindow: 1000 * 60, // 50 requests per minute
+	})
+
+	private static generateCacheKey(query: string, service?: string): string {
+		const normalizedQuery = query.toLowerCase().trim().replace(/\s+/g, ' ')
+		return `${normalizedQuery}:${service || 'default'}`
+	}
+
+	private static getCachedResults(cacheKey: string): GeocodeResult[] | null {
+		const entry = this.cache.get(cacheKey)
+		if (!entry) return null
+
+		const isExpired = Date.now() - entry.timestamp > this.CACHE_DURATION
+		if (isExpired) {
+			this.cache.delete(cacheKey)
+			return null
+		}
+
+		return entry.results
+	}
+
+	private static async rateLimitedFetch(
+		url: string,
+		rateLimiter: RateLimiter,
+		retries = this.MAX_RETRIES,
+		baseDelay = 1000,
+	): Promise<Response> {
+		for (let i = 0; i < retries; i++) {
+			try {
+				await rateLimiter.waitForToken()
+				const response = await fetch(url)
+
+				if (response.ok) return response
+
+				if (response.status === 429) {
+					const delay = baseDelay * Math.pow(2, i)
+					await new Promise((resolve) => setTimeout(resolve, delay))
+					continue
+				}
+
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+			} catch (error) {
+				if (i === retries - 1) throw error
+				await new Promise((resolve) => setTimeout(resolve, baseDelay * Math.pow(2, i)))
+			}
+		}
+		throw new Error('Max retries exceeded')
+	}
+
+	private static async nominatimGeocode(query: string): Promise<GeocodeResult[]> {
 		const baseUrl = 'https://nominatim.openstreetmap.org/search'
 		const params = new URLSearchParams({
-			q: query.trim(), // Ensure proper trimming
+			q: query.trim(),
 			format: 'json',
 			limit: '5',
-			addressdetails: '1', // Get detailed address information
+			addressdetails: '1',
 		})
 
 		try {
-			const response = await fetch(`${baseUrl}?${params}`)
+			const response = await this.rateLimitedFetch(
+				`${baseUrl}?${params}`,
+				this.nominatimRateLimiter,
+			)
 			const data = await response.json()
 
 			return data.map((result: any) => ({
 				latitude: parseFloat(result.lat),
 				longitude: parseFloat(result.lon),
 				formattedAddress: this.formatAddress(result),
-				confidence: result.importance,
+				confidence: this.calculateConfidence(result, 'nominatim'),
+				source: 'nominatim' as const,
+				metadata: {
+					osmId: result.osm_id,
+					importance: result.importance,
+					originalAddress: result.address,
+				},
 			}))
 		} catch (error) {
-			console.error('Nominatim Geocoding Error:', error)
-			return []
+			Logger.error('Nominatim Geocoding Error:', error)
+			throw this.createGeocodeError('SERVICE_ERROR', 'Nominatim service failed', error as Error)
 		}
 	}
 
-	// Helper method to format addresses consistently
-	private static formatAddress(result: any): string {
-		const parts = []
-
-		if (result.address) {
-			// Add city/town/village
-			if (result.address.city) parts.push(result.address.city)
-			else if (result.address.town) parts.push(result.address.town)
-			else if (result.address.village) parts.push(result.address.village)
-
-			// Add state/province
-			if (result.address.state) parts.push(result.address.state)
-
-			// Add country
-			if (result.address.country) parts.push(result.address.country)
-		}
-
-		// Fallback to display_name if we couldn't construct a good address
-		return parts.length > 0 ? parts.join(', ') : result.display_name
-	}
-
-	// Google Maps Geocoding API (Requires API Key)
-	static async googleMapsGeocode(query: string, apiKey: string): Promise<GeocodeResult[]> {
+	private static async googleMapsGeocode(query: string, apiKey: string): Promise<GeocodeResult[]> {
 		const baseUrl = 'https://maps.googleapis.com/maps/api/geocode/json'
 		const params = new URLSearchParams({
 			address: query,
@@ -62,74 +107,140 @@ export class GeocodingService {
 		})
 
 		try {
-			const response = await fetch(`${baseUrl}?${params}`)
+			const response = await this.rateLimitedFetch(`${baseUrl}?${params}`, this.googleRateLimiter)
 			const data = await response.json()
 
 			return data.results.map((result: any) => ({
 				latitude: result.geometry.location.lat,
 				longitude: result.geometry.location.lng,
 				formattedAddress: result.formatted_address,
-				confidence: result.geometry.location_type === 'ROOFTOP' ? 1 : 0.5,
+				confidence: this.calculateConfidence(result, 'google'),
+				source: 'google' as const,
+				metadata: {
+					placeId: result.place_id,
+					types: result.types,
+					locationType: result.geometry.location_type,
+				},
 			}))
 		} catch (error) {
-			console.error('Google Maps Geocoding Error:', error)
-			return []
+			Logger.error('Google Maps Geocoding Error:', error)
+			throw this.createGeocodeError('SERVICE_ERROR', 'Google Maps service failed', error as Error)
 		}
 	}
 
-	// Fallback Method: Generate Pseudo-Random Coordinates
-	static generatePseudoCoordinates(query: string): GeocodeResult {
-		// Create a deterministic but pseudo-random coordinate based on the query
+	private static generatePseudoCoordinates(query: string): GeocodeResult {
 		const hash = query.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-
 		return {
-			latitude: 30 + (hash % 50), // Latitude between 30 and 80
-			longitude: -120 + (hash % 100), // Longitude between -120 and -20
+			latitude: 30 + (hash % 50),
+			longitude: -120 + (hash % 100),
 			formattedAddress: `Estimated Location for: ${query}`,
 			confidence: 0.1,
+			source: 'pseudo' as const,
+			metadata: {
+				hash,
+				generated: new Date().toISOString(),
+			},
 		}
 	}
 
-	// Unified Geocoding Method
-	static async geocode(
-		query: string,
-		options: {
-			apiKey?: string
-			preferredService?: 'nominatim' | 'google'
-		} = {},
-	): Promise<GeocodeResult[]> {
-		let results: GeocodeResult[] = []
+	static async geocode(query: string, options: GeocodingOptions = {}): Promise<GeocodeResult[]> {
+		if (!query?.trim()) {
+			throw this.createGeocodeError('INVALID_REQUEST', 'Query cannot be empty')
+		}
 
-		// Try preferred service first
+		const cacheKey = this.generateCacheKey(query, options.preferredService)
+
+		if (!options.forceFresh) {
+			const cachedResults = this.getCachedResults(cacheKey)
+			if (cachedResults) {
+				Logger.debug('Cache hit for query:', query)
+				return cachedResults
+			}
+		}
+
+		const services: Promise<GeocodeResult[]>[] = []
+		const timeout = options.timeout || this.DEFAULT_TIMEOUT
+
 		if (options.preferredService === 'nominatim') {
-			results = await this.nominatimGeocode(query)
+			services.push(this.nominatimGeocode(query))
 		} else if (options.preferredService === 'google' && options.apiKey) {
-			results = await this.googleMapsGeocode(query, options.apiKey)
+			services.push(this.googleMapsGeocode(query, options.apiKey))
 		}
 
-		// If no results, try Nominatim
-		if (results.length === 0) {
-			results = await this.nominatimGeocode(query)
+		// Add fallback services
+		if (!services.length) {
+			services.push(this.nominatimGeocode(query))
 		}
 
-		// If still no results, generate pseudo-coordinates
-		if (results.length === 0) {
-			results = [this.generatePseudoCoordinates(query)]
-		}
+		const timeoutPromise = new Promise<never>((_, reject) =>
+			setTimeout(() => reject(this.createGeocodeError('TIMEOUT', 'Geocoding timeout')), timeout),
+		)
 
-		return results
+		try {
+			const results = await Promise.race([Promise.any(services), timeoutPromise])
+
+			if (results.length > 0) {
+				this.cache.set(cacheKey, {
+					results,
+					timestamp: Date.now(),
+					source: options.preferredService || 'nominatim',
+				})
+				return results
+			}
+
+			return [this.generatePseudoCoordinates(query)]
+		} catch (error) {
+			Logger.error('Geocoding failed:', error)
+			return [this.generatePseudoCoordinates(query)]
+		}
 	}
-}
 
-// Example Usage
-async function exampleGeocoding() {
-	// Basic usage
-	const usLocations = await GeocodingService.geocode('United States')
-	console.log('US Locations:', usLocations)
+	private static calculateConfidence(result: any, source: 'nominatim' | 'google'): number {
+		const weights = {
+			addressCompleteness: 0.4,
+			sourceReliability: 0.3,
+			precision: 0.3,
+		}
 
-	// With specific options
-	const parisLocations = await GeocodingService.geocode('Paris', {
-		preferredService: 'nominatim',
-	})
-	console.log('Paris Locations:', parisLocations)
+		const addressScore = result.address ? Object.keys(result.address).length / 10 : 0.5
+
+		const sourceScore = source === 'google' ? 0.9 : 0.7
+
+		const precisionScore =
+			source === 'nominatim'
+				? result.importance || 0.5
+				: result.geometry?.location_type === 'ROOFTOP'
+					? 1
+					: 0.6
+
+		return Math.min(
+			1,
+			Math.max(
+				0,
+				addressScore * weights.addressCompleteness +
+					sourceScore * weights.sourceReliability +
+					precisionScore * weights.precision,
+			),
+		)
+	}
+
+	private static formatAddress(result: any): string {
+		const parts = []
+		if (result.address) {
+			if (result.address.city) parts.push(result.address.city)
+			else if (result.address.town) parts.push(result.address.town)
+			else if (result.address.village) parts.push(result.address.village)
+			if (result.address.state) parts.push(result.address.state)
+			if (result.address.country) parts.push(result.address.country)
+		}
+		return parts.length > 0 ? parts.join(', ') : result.display_name
+	}
+
+	private static createGeocodeError(
+		code: GeocodeError['code'],
+		message: string,
+		originalError?: Error,
+	): GeocodeError {
+		return { code, message, originalError }
+	}
 }
