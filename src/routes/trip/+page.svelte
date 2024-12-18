@@ -1,9 +1,9 @@
 <!-- +page.svelte -->
 <script lang="ts">
 import SplitCanvas from '$lib/components/common/Canvas/SplitCanvas.svelte'
-import TextEditor from '$lib/components/trip/components/TextEditor.svelte'
-import type { MapMarker } from '$lib/components/trip/types/types'
-import Map from '$lib/components/trip/components/Map.svelte'
+import TextEditor from '$lib/app/trip/components/TextEditor.svelte'
+import type { MapMarker } from '$lib/app/trip/types/types'
+import Map from '$lib/app/trip/components/Map.svelte'
 
 // Create state
 let markers = $state<MapMarker[]>([])

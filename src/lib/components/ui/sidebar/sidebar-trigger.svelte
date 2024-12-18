@@ -26,7 +26,7 @@ const sidebar = useSidebar()
 	data-sidebar="trigger"
 	variant="ghost"
 	size="icon"
-	class={cn('mt-2 h-8 w-8 p-4', className)}
+	class={cn('h-7 w-7', className)}
 	{...restProps}
 >
 	<PanelLeft />

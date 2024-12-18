@@ -2,7 +2,7 @@
 import { Button } from '$lib/components/ui/button'
 import { CheckIcon, TrashIcon } from 'lucide-svelte'
 import type { Todo } from '$lib/database/todo-db'
-import { formatDate } from '$lib/utils/date'
+import { formatDate } from '$lib/app/todos/utils/date'
 
 // Props with $props
 let { todo, onToggle, onDelete } = $props<{

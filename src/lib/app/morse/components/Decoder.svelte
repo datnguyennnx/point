@@ -2,7 +2,7 @@
 import * as Card from '$lib/components/ui/card'
 import { Textarea } from '$lib/components/ui/textarea'
 import { Label } from '$lib/components/ui/label'
-import { morseToText } from '$lib/utils/morse'
+import { morseToText } from '$lib/app/morse/utils/morse'
 
 let morseInput = $state('')
 let textOutput = $state('')

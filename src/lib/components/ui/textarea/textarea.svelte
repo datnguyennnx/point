@@ -3,13 +3,11 @@ import type { WithElementRef, WithoutChildren } from 'bits-ui'
 import type { HTMLTextareaAttributes } from 'svelte/elements'
 import { cn } from '$lib/utils.js'
 import { Check, Copy } from 'lucide-svelte'
-
 interface TextareaProps extends WithoutChildren<WithElementRef<HTMLTextareaAttributes>> {
 	ref?: HTMLTextAreaElement | null
 	showCopyButton?: boolean
 	readonly?: boolean
 }
-
 let {
 	ref = $bindable<HTMLTextAreaElement | null>(null),
 	value = $bindable<string>(''),
@@ -18,11 +16,9 @@ let {
 	class: className,
 	...restProps
 }: TextareaProps = $props()
-
 let height = $state('auto')
 let isCopied = $state(false)
 let copyTimeout = $state<ReturnType<typeof setTimeout> | undefined>(undefined)
-
 // Function to adjust height
 function adjustHeight(element: HTMLTextAreaElement | null) {
 	if (!element) return
@@ -30,21 +26,17 @@ function adjustHeight(element: HTMLTextAreaElement | null) {
 	height = `${element.scrollHeight}px`
 	element.style.height = height
 }
-
 // Handle input events to adjust height
 function handleInput(event: Event) {
 	const textarea = event.currentTarget as HTMLTextAreaElement
 	adjustHeight(textarea)
 }
-
 // Copy functionality
 async function copyToClipboard() {
 	if (!value) return
-
 	try {
 		await navigator.clipboard.writeText(value.toString())
 		isCopied = true
-
 		if (copyTimeout) clearTimeout(copyTimeout)
 		copyTimeout = setTimeout(() => {
 			isCopied = false
@@ -53,14 +45,12 @@ async function copyToClipboard() {
 		console.error('Failed to copy text:', err)
 	}
 }
-
 // Effect for reactive height adjustment
 $effect(() => {
 	if (ref && value !== undefined) {
 		adjustHeight(ref)
 	}
 })
-
 $effect(() => {
 	return () => {
 		if (copyTimeout) clearTimeout(copyTimeout)
@@ -82,7 +72,6 @@ $effect(() => {
 		)}
 		{...restProps}
 	></textarea>
-
 	{#if showCopyButton}
 		<button
 			type="button"
