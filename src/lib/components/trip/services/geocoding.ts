@@ -6,8 +6,8 @@ import { Logger } from './logger'
 export class OptimizedGeocodingService {
 	private static cache = new Map<string, CacheEntry>()
 	private static readonly CACHE_DURATION = 1000 * 60 * 60 // 1 hour
-	private static readonly DEFAULT_TIMEOUT = 5000 // 5 seconds
-	private static readonly MAX_RETRIES = 3
+	private static readonly DEFAULT_TIMEOUT = 10000 // 5 seconds
+	private static readonly MAX_RETRIES = 5
 
 	private static nominatimRateLimiter = new RateLimiter({
 		maxRequests: 1,

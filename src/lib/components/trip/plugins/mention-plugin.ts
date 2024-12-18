@@ -101,12 +101,10 @@ export function handleMentionCommand(
 	editor: Editor,
 ): void {
 	if (!state || !dispatch) return
-
 	try {
 		const { from, to } = state.selection
 		const textBefore = state.doc.textBetween(Math.max(0, from - 50), from)
 		const atIndex = textBefore.lastIndexOf('@')
-
 		if (atIndex === -1) return
 
 		const start = from - (textBefore.length - atIndex)
@@ -115,7 +113,6 @@ export function handleMentionCommand(
 
 		// Create and dispatch transaction
 		const tr = state.tr.deleteRange(start, to).insertText(mentionText, start)
-
 		dispatch(tr)
 
 		// Apply highlighting and formatting
@@ -130,7 +127,6 @@ export function handleMentionCommand(
 			.run()
 	} catch (error) {
 		console.error('Error handling mention command:', error)
-		// Implement fallback behavior if needed
 	}
 }
 
@@ -146,7 +142,7 @@ export const debouncedLocationSearch = debounce(async (query: string): Promise<M
 	try {
 		const locations = await OptimizedGeocodingService.geocode(searchTerm, {
 			preferredService: 'nominatim',
-			timeout: 3000, // 3 second timeout
+			timeout: 5000, // 5 second timeout
 		})
 
 		return locations

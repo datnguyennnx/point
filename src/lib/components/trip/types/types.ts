@@ -5,10 +5,14 @@ import type { GeocodeResult } from '../services/types'
 export interface MentionItem {
 	id: string
 	label: string
-	function?: () => void
-	location?: GeocodeResult
+	location?: {
+		latitude: number
+		longitude: number
+		formattedAddress?: string
+	}
+	confidence?: number
+	metadata?: any
 }
-
 export interface MentionListProps {
 	items: MentionItem[]
 	command: (item: MentionItem) => void
@@ -55,4 +59,10 @@ export interface SuggestionRenderHandlers {
 	onUpdate: (props: SuggestionHandlerProps) => void
 	onKeyDown: (props: SuggestionKeyboardHandlerProps) => boolean
 	onExit: () => void
+}
+
+export interface MapMarker {
+	lngLat: [number, number]
+	label: string
+	name: string
 }

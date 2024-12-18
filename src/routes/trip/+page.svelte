@@ -9,18 +9,31 @@ import {
 	DefaultMarker,
 	Popup,
 } from 'svelte-maplibre'
+import { onMount } from 'svelte'
+import type { MapMarker } from '$lib/components/trip/types/types'
 
-// Define the marker type
-interface Marker {
-	lngLat: [number, number]
-	label: string
+// Create state
+let markers = $state<MapMarker[]>([])
+let map: any
+
+// Function to handle map instance
+function handleMapInit(event: CustomEvent) {
+	map = event.detail
 }
 
-let markers: Marker[] = []
-
-// Use a callback prop instead of event handling
-function handleAddMarker(marker: { lngLat: [number, number]; label: string }) {
+// Add marker function
+function addMarker(marker: MapMarker) {
 	markers = [...markers, marker]
+
+	// Fly to the new marker location
+	if (map) {
+		map.flyTo({
+			center: marker.lngLat,
+			zoom: 12,
+			duration: 2000,
+			essential: true,
+		})
+	}
 }
 </script>
 
@@ -29,13 +42,14 @@ function handleAddMarker(marker: { lngLat: [number, number]; label: string }) {
 		<div class="flex w-full flex-col overflow-hidden">
 			<div class="no-scrollbar h-full w-full overflow-y-auto">
 				<div class="w-full p-4">
-					<TextEditor />
+					<TextEditor addMarker={addMarker} />
 				</div>
 			</div>
 		</div>
 	</div>
 	<div slot="right" class="flex w-1/2 overflow-hidden rounded-md border">
 		<MapLibre
+			on:ready={handleMapInit}
 			center={[108, 17]}
 			zoom={5}
 			class="h-full w-full"
@@ -43,11 +57,11 @@ function handleAddMarker(marker: { lngLat: [number, number]; label: string }) {
 		>
 			<NavigationControl position="top-right" />
 			<FullscreenControl position="top-right" />
-
-			{#each markers as { lngLat, label }}
-				<DefaultMarker lngLat={lngLat}>
+			{#each markers as { lngLat, name, label }}
+				<DefaultMarker lngLat={lngLat} draggable>
 					<Popup offset={[0, -10]}>
-						<div class="text-lg font-bold">{label}</div>
+						<div class="text-lg font-bold">{name}</div>
+						<div class="text-sm">{label}</div>
 					</Popup>
 				</DefaultMarker>
 			{/each}

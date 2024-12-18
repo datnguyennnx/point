@@ -13,7 +13,6 @@ import StarterKit from '@tiptap/starter-kit'
 import { Editor } from '@tiptap/core'
 import Highlight from '@tiptap/extension-highlight'
 import MentionList from './MentionList.svelte'
-
 import type {
 	MentionItem,
 	MentionListRef,
@@ -27,16 +26,28 @@ import {
 	handleMentionCommand,
 } from '../plugins/mention-plugin'
 
+// Add props interface
+const { addMarker } = $props<{
+	addMarker: (marker: { lngLat: [number, number]; label: string; name: string }) => void
+}>()
+
 let editor = $state<Editor | null>(null)
 let element = $state<HTMLDivElement>()
 let mentionListRef = $state<MentionListRef | null>(null)
 let items = $state<MentionItem[]>([])
 
-// Add the missing onMentionCommand function
 function onMentionCommand(item: MentionItem) {
 	if (editor?.view) {
 		const { state, dispatch } = editor.view
-		handleMentionCommand(state, dispatch, item, editor) // Pass editor instance
+		handleMentionCommand(state, dispatch, item, editor)
+
+		if (item.location) {
+			addMarker({
+				lngLat: [item.location.longitude, item.location.latitude],
+				label: item.label,
+				name: item.location.formattedAddress || item.label,
+			})
+		}
 	}
 }
 
