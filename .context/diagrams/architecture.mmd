@@ -1,0 +1,17 @@
+graph TD
+A[Svelte Frontend] --> B[PgLite Local Database]
+
+    subgraph Features
+        D[Morse Code App]
+        E[Todo Management]
+        F[Trip Planning]
+    end
+
+    B --> D
+    B --> E
+    B --> F
+
+
+    G[Utility Components] --> D
+    G --> E
+    G --> F

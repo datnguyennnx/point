@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant User
+    participant UI
+    participant Services
+    participant PgLite
+    
+    User->>UI: Interact with App
+    UI->>Services: Request Data/Action
+    Services->>PgLite: Read/Write
+    PgLite-->>Services: Return Data
+    Services-->>UI: Update UI
+    UI->>User: Display Result
