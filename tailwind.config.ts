@@ -90,7 +90,7 @@ const config: Config = {
 			},
 		},
 	},
-	plugins: [tailwindcssAnimate, require('@tailwindcss/typography')],
+	plugins: [tailwindcssAnimate],
 }
 
 export default config

@@ -1,5 +1,5 @@
 // src/lib/utils/morse.ts
-import { MORSE_CODE, REVERSE_MORSE } from '$lib/constants/morse'
+import { MORSE_CODE, REVERSE_MORSE } from '$lib/app/morse/constants/morse'
 
 export function textToMorse(text: string): string {
 	return text
