@@ -73,3 +73,44 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+@layer utilities {
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+}
+
+@layer components {
+	.prose :where(p):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0.5em;
+		margin-bottom: 0em;
+	}
+	.prose :where(ul):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0.5em;
+		margin-bottom: 0em;
+	}
+	.prose :where(h1):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0em;
+		margin-bottom: 0.25em;
+	}
+
+	.prose :where(h2):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0em;
+		margin-bottom: 0.25em;
+	}
+
+	.prose :where(h3):not(:where([class~='not-prose'], [class~='not-prose'] *)) {
+		margin-top: 0em;
+		margin-bottom: 0.25em;
+	}
+}
+
+.mention-highlight {
+	background-color: #e9d5ff;
+	border-radius: 0.25rem;
+	padding: 0.125rem 0.25rem;
+}
