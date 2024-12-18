@@ -7,20 +7,15 @@ import Map from '$lib/components/trip/components/Map.svelte'
 
 // Create state
 let markers = $state<MapMarker[]>([])
-let map: any
+let mapComponent: any
 
 // Add marker function
 function addMarker(marker: MapMarker) {
 	markers = [...markers, marker]
-
-	// Fly to the new marker location
+	// Get map instance and fly to location
+	const map = mapComponent?.getMap()
 	if (map) {
-		map.flyTo({
-			center: marker.lngLat,
-			zoom: 12,
-			duration: 2000,
-			essential: true,
-		})
+		mapComponent.flyToMarker(marker.lngLat)
 	}
 }
 </script>
@@ -36,6 +31,6 @@ function addMarker(marker: MapMarker) {
 		</div>
 	</div>
 	<div slot="right" class="flex w-1/2 overflow-hidden rounded-md border">
-		<Map />
+		<Map bind:this={mapComponent} markers={markers} />
 	</div>
 </SplitCanvas>

@@ -134,17 +134,15 @@ function normalizeSearchTerm(query: string): string {
 	return query.replace('@', '').toLowerCase().trim().replace(/\s+/g, ' ')
 }
 
-// Optimized debounced search with error handling and retry logic
 export const debouncedLocationSearch = debounce(async (query: string): Promise<MentionItem[]> => {
 	const searchTerm = normalizeSearchTerm(query)
 	if (!searchTerm) return []
-
 	try {
 		const locations = await OptimizedGeocodingService.geocode(searchTerm, {
-			preferredService: 'nominatim',
 			timeout: 5000, // 5 second timeout
+			limit: 5,
+			types: ['place', 'address', 'poi'],
 		})
-
 		return locations
 			.filter((location) => location.formattedAddress && location.confidence > 0.3)
 			.map((location) => ({
@@ -158,12 +156,12 @@ export const debouncedLocationSearch = debounce(async (query: string): Promise<M
 				},
 			}))
 			.sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
-			.slice(0, 5) // Limit to top 5 results
+			.slice(0, 5)
 	} catch (error) {
 		console.error('Location search error:', error)
 		return []
 	}
-}, 250) // Increased debounce time for better performance
+}, 250)
 
 // Helper functions
 function handleLocationSelection(location: any): void {
