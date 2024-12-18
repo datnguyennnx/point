@@ -11,13 +11,9 @@ export default defineConfig({
 	},
 	define: {
 		'import.meta.env.VERCEL_ANALYTICS_ID': JSON.stringify(process.env.VERCEL_ANALYTICS_ID),
+		'process.env.MAPBOX_ACCESS_TOKEN': JSON.stringify(process.env.MAPBOX_ACCESS_TOKEN),
 	},
-
-	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-	//
-	// 1. prevent vite from obscuring rust errors
 	clearScreen: false,
-	// 2. tauri expects a fixed port, fail if that port is not available
 	server: {
 		port: 1420,
 		strictPort: true,
@@ -30,7 +26,6 @@ export default defineConfig({
 				}
 			: undefined,
 		watch: {
-			// 3. tell vite to ignore watching `src-tauri`
 			ignored: ['**/src-tauri/**'],
 		},
 	},
