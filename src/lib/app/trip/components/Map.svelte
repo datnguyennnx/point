@@ -53,9 +53,11 @@ function setupEventHandlers(map: mapboxgl.Map) {
 	})
 }
 
-// Function to add or update markers
 function updateMarkers(newMarkers: MapMarker[]) {
 	if (!map) return
+
+	// Type assertion for map instance
+	const mapInstance = map as mapboxgl.Map
 
 	// Remove markers that are no longer in the list
 	Object.keys(markers).forEach((key) => {
@@ -68,19 +70,20 @@ function updateMarkers(newMarkers: MapMarker[]) {
 	// Add or update markers
 	newMarkers.forEach((markerData) => {
 		const key = `${markerData.lngLat[0]},${markerData.lngLat[1]}`
-
 		if (!markers[key]) {
 			// Create popup
 			const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`<h2>${markerData.name}</h2>`)
 
-			// Create marker
-			const marker = new mapboxgl.Marker().setLngLat(markerData.lngLat).setPopup(popup).addTo(map)
+			// Create marker with type-safe map instance
+			const marker = new mapboxgl.Marker()
+				.setLngLat(markerData.lngLat)
+				.setPopup(popup)
+				.addTo(mapInstance)
 
 			markers[key] = marker
 		}
 	})
 }
-
 // Function to fly to a marker
 export function flyToMarker(lngLat: [number, number], zoom: number = 12) {
 	if (!map) return
