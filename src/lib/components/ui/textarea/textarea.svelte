@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { WithElementRef, WithoutChildren } from 'bits-ui'
 import type { HTMLTextareaAttributes } from 'svelte/elements'
-import { cn } from '$lib/utils.js'
+import { cn } from '$lib/utils'
 import { Check, Copy } from 'lucide-svelte'
 interface TextareaProps extends WithoutChildren<WithElementRef<HTMLTextareaAttributes>> {
 	ref?: HTMLTextAreaElement | null
