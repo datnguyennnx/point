@@ -9,14 +9,10 @@ module.exports = {
 	],
 	parserOptions: {
 		parser: {
-			// Specify a parser for each lang.
 			ts: '@typescript-eslint/parser',
 			js: 'espree',
 			typescript: '@typescript-eslint/parser',
 		},
-	},
-	plugins: ['@typescript-eslint'],
-	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: 2020,
 		extraFileExtensions: ['.svelte'],
@@ -26,6 +22,7 @@ module.exports = {
 		es2017: true,
 		node: true,
 	},
+	plugins: ['@typescript-eslint'],
 	overrides: [
 		{
 			files: ['*.svelte'],
@@ -34,5 +31,15 @@ module.exports = {
 				parser: '@typescript-eslint/parser',
 			},
 		},
+		{
+			files: ['tailwind.config.ts'],
+			rules: {
+				'@typescript-eslint/no-require-imports': 'off',
+			},
+		},
 	],
+	rules: {
+		'@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+		'@typescript-eslint/no-explicit-any': ['warn'],
+	},
 }
