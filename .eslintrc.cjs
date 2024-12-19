@@ -39,7 +39,19 @@ module.exports = {
 		},
 	],
 	rules: {
-		'@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-		'@typescript-eslint/no-explicit-any': ['warn'],
+		'@typescript-eslint/no-unused-vars': [
+			'error',
+			{
+				args: 'after-used',
+				argsIgnorePattern: '^_',
+				varsIgnorePattern: '^_',
+			},
+		],
+		'@typescript-eslint/no-explicit-any': 'warn',
+		'no-unused-vars': 'off',
+		'react/react-in-jsx-scope': 'off',
+		'react/function-component-definition': 'off',
+		'no-shadow': 'off',
+		'import/extensions': ['off', 'never'],
 	},
 }
