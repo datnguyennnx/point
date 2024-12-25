@@ -1,8 +1,8 @@
 <script lang="ts">
+import { Settings, Info } from 'lucide-svelte'
+import { mode, setMode } from 'mode-watcher'
 import * as Dialog from '$lib/components/ui/dialog/index.js'
 import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
-import { mode, setMode } from 'mode-watcher'
-import { Settings, Info } from 'lucide-svelte'
 
 let activeSection = 'general'
 

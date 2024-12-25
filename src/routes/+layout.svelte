@@ -1,11 +1,11 @@
 <script lang="ts">
 import '../app.css'
-import { dev } from '$app/environment'
 import { inject } from '@vercel/analytics'
 import { ModeWatcher } from 'mode-watcher'
-import { SidebarProvider, SidebarTrigger } from '$lib/components/ui/sidebar/index.js'
-import AppSidebar from '$lib/components/common/Siderbar/AppSidebar.svelte'
+import { dev } from '$app/environment'
 import LoadingDot from '$lib/components/common/LoadingDot.svelte'
+import AppSidebar from '$lib/components/common/Siderbar/AppSidebar.svelte'
+import { SidebarProvider, SidebarTrigger } from '$lib/components/ui/sidebar/index.js'
 import { databaseManager } from '$lib/database'
 
 let { children } = $props()

@@ -1,6 +1,6 @@
 import { databaseManager } from './database'
-import type { PGlite } from '@electric-sql/pglite'
 import { z } from 'zod'
+import type { PGlite } from '@electric-sql/pglite'
 
 // Enhanced type validation with Zod
 const TodoSchema = z.object({
@@ -132,7 +132,7 @@ export class Todos {
 	}
 
 	async getFilteredTodos(filter: 'all' | 'active' | 'completed'): Promise<Todo[]> {
-		if (filter === 'all') return this.getTodos()
+		if (filter === 'all') return await this.getTodos()
 
 		const db = await this.getDatabase()
 

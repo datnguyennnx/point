@@ -21,7 +21,7 @@ export class RateLimiter {
 
 		const waitTime = this.refillRate - (Date.now() - this.lastRefill)
 		await new Promise((resolve) => setTimeout(resolve, waitTime))
-		return this.waitForToken()
+		return await this.waitForToken()
 	}
 
 	private refillTokens(): void {

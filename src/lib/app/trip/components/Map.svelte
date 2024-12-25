@@ -1,10 +1,9 @@
 <!-- Map.svelte -->
 <script lang="ts">
-import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public'
-import { onDestroy } from 'svelte'
 import mapboxgl from 'mapbox-gl'
-import type { Map, MapMouseEvent, GeoJSONFeature } from 'mapbox-gl'
+import { onDestroy } from 'svelte'
 import type { MapMarker } from '../types/types'
+import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public'
 
 // Use state instead of let for reactive variables
 let map = $state<mapboxgl.Map | null>(null)

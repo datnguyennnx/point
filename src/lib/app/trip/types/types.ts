@@ -1,6 +1,5 @@
 import type { Editor } from '@tiptap/core'
 import type { SelectionRange, EditorState } from '@tiptap/pm/state'
-import type { GeocodeResult } from '../services/types'
 
 export interface MentionItem {
 	id: string

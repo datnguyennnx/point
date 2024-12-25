@@ -1,5 +1,5 @@
-import { PGlite } from '@electric-sql/pglite'
 import { DatabaseMigration } from './migrate'
+import { PGlite } from '@electric-sql/pglite'
 
 export class DatabaseManager {
 	private static instance: DatabaseManager

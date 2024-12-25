@@ -7,7 +7,7 @@ span {
 </style>
 
 <script lang="ts">
-import type { MentionItem, MentionListRef } from '../types/types'
+import type { MentionItem } from '../types/types'
 
 let isOpen = $state(false)
 let items = $state<MentionItem[]>([])
@@ -16,7 +16,7 @@ let selectedIndex = $state(0)
 let top = $state(0)
 let left = $state(0)
 
-const { items: propItems, command } = $props<{
+const { command } = $props<{
 	items: MentionItem[]
 	command: (item: MentionItem) => void
 }>()

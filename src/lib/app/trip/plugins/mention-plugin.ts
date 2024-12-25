@@ -1,16 +1,15 @@
 // mention-plugin.ts
+import { OptimizedGeocodingService } from '../services/geocoding'
+import { debounce } from '../utils/debounce'
 import { Extension } from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
-import type { Editor } from '@tiptap/core'
-import type { SelectionRange } from '@tiptap/pm/state'
-import type { EditorState } from '@tiptap/pm/state'
 import type {
 	MentionItem,
 	SuggestionCommandProps,
 	SuggestionKeyboardHandlerProps,
 } from '../types/types'
-import { OptimizedGeocodingService } from '../services/geocoding'
-import { debounce } from '../utils/debounce'
+import type { Editor } from '@tiptap/core'
+import type { EditorState } from '@tiptap/pm/state'
 
 interface MentionState {
 	lastQuery: string
@@ -31,7 +30,7 @@ export const CustomMention = Extension.create({
 		return {
 			suggestion: {
 				char: '@',
-				command: ({ editor, range, props }: SuggestionCommandProps) => {
+				command: ({ editor, props }: SuggestionCommandProps) => {
 					if (editor.view) {
 						const { state, dispatch } = editor.view
 						handleMentionCommand(state, dispatch, props as MentionItem, editor)
@@ -66,13 +65,7 @@ export const CustomMention = Extension.create({
 						mentionState.isSearching = false
 					}
 				},
-				keyboardHandler: ({
-					event,
-					command,
-					range,
-					props,
-					state,
-				}: SuggestionKeyboardHandlerProps): boolean => {
+				keyboardHandler: ({ event }: SuggestionKeyboardHandlerProps): boolean => {
 					const isNavigationKey = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(event.key)
 					if (isNavigationKey) {
 						event.preventDefault()

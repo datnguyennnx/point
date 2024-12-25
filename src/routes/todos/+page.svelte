@@ -143,7 +143,10 @@ async function updateTodoDescription() {
 				{#each todos as todo (todo.id)}
 					<Table.Row>
 						<Table.Cell>
-							<Checkbox checked={todo.completed} onCheckedChange={() => toggleTodo(todo.id!)} />
+							<Checkbox
+								checked={todo.completed}
+								onCheckedChange={async () => await toggleTodo(todo.id!)}
+							/>
 						</Table.Cell>
 						<Table.Cell class="max-w-[250px]">
 							<p class="truncate">{todo.text}</p>
@@ -179,7 +182,7 @@ async function updateTodoDescription() {
 									</Dialog.Header>
 									<Dialog.Footer>
 										<Dialog.Close>Cancel</Dialog.Close>
-										<Button onclick={() => removeTodo(todo.id!)}>Confirm Delete</Button>
+										<Button onclick={async () => await removeTodo(todo.id!)}>Confirm Delete</Button>
 									</Dialog.Footer>
 								</Dialog.Content>
 							</Dialog.Root>

@@ -1,8 +1,8 @@
 <script lang="ts">
-import * as Tabs from '$lib/components/ui/tabs'
-import Canvas from '$lib/components/common/Canvas/Canvas.svelte'
-import Encoder from '$lib/app/morse/components/Encoder.svelte'
 import Decoder from '$lib/app/morse/components/Decoder.svelte'
+import Encoder from '$lib/app/morse/components/Encoder.svelte'
+import Canvas from '$lib/components/common/Canvas/Canvas.svelte'
+import * as Tabs from '$lib/components/ui/tabs'
 </script>
 
 <Canvas>
