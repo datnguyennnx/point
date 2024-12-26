@@ -1,3 +1,4 @@
+<!-- /src/routes/morse/+page.svelte -->
 <script lang="ts">
 import Decoder from '$lib/app/morse/components/Decoder.svelte'
 import Encoder from '$lib/app/morse/components/Encoder.svelte'

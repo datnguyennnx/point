@@ -19,18 +19,33 @@ let {
 let height = $state('auto')
 let isCopied = $state(false)
 let copyTimeout = $state<ReturnType<typeof setTimeout> | undefined>(undefined)
-// Function to adjust height
+
 function adjustHeight(element: HTMLTextAreaElement | null) {
 	if (!element) return
+
+	// Reset height to auto first
 	element.style.height = 'auto'
-	height = `${element.scrollHeight}px`
-	element.style.height = height
+
+	// Set to scrollHeight to get the real height
+	const newHeight = `${element.scrollHeight}px`
+	element.style.height = newHeight
+	height = newHeight
 }
+
 // Handle input events to adjust height
 function handleInput(event: Event) {
 	const textarea = event.currentTarget as HTMLTextAreaElement
 	adjustHeight(textarea)
 }
+
+// Effect for initial and reactive height adjustment
+$effect(() => {
+	if (ref && value !== undefined) {
+		// Use setTimeout to ensure DOM is updated
+		setTimeout(() => adjustHeight(ref), 0)
+	}
+})
+
 // Copy functionality
 async function copyToClipboard() {
 	if (!value) return
@@ -45,12 +60,7 @@ async function copyToClipboard() {
 		console.error('Failed to copy text:', err)
 	}
 }
-// Effect for reactive height adjustment
-$effect(() => {
-	if (ref && value !== undefined) {
-		adjustHeight(ref)
-	}
-})
+
 $effect(() => {
 	return () => {
 		if (copyTimeout) clearTimeout(copyTimeout)
