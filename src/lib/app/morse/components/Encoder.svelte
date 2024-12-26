@@ -1,3 +1,4 @@
+<!-- /src/lib/app/morse/components/Encoder.svelte -->
 <script lang="ts">
 import * as Card from '$lib/components/ui/card'
 import { Textarea } from '$lib/components/ui/textarea'
@@ -14,8 +15,8 @@ $effect(() => {
 
 <Card.Root>
 	<Card.Header>
-		<Card.Title>Text to Morse Code</Card.Title>
-		<Card.Description>
+		<Card.Title data-testid="encoder-title">Text to Morse Code</Card.Title>
+		<Card.Description data-testid="encoder-description">
 			Convert your text message into Morse code. Type your message below.
 		</Card.Description>
 	</Card.Header>
@@ -23,15 +24,25 @@ $effect(() => {
 		<div class="space-y-2">
 			<Label for="text-input">Your Message</Label>
 			<Textarea
-				showCopyButton={true}
+				data-testid="text-input"
 				id="text-input"
+				aria-label="Your Message"
 				placeholder="Type your message here..."
 				bind:value={textInput}
+				showCopyButton={true}
 			/>
 		</div>
 		<div class="space-y-2">
 			<Label for="morse-output">Morse Code</Label>
-			<Textarea showCopyButton={true} id="morse-output" value={morseOutput} readonly />
+			<Textarea
+				data-testid="morse-output"
+				id="morse-output"
+				aria-label="Morse Code"
+				placeholder="Converted Morse Code will appear here"
+				value={morseOutput}
+				readonly={true}
+				showCopyButton={true}
+			/>
 		</div>
 	</Card.Content>
 </Card.Root>

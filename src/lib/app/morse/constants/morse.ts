@@ -1,4 +1,4 @@
-// src/lib/constants/morse.ts
+// src/lib/app/constants/morse.ts
 export type MorseCodeMap = { [key: string]: string }
 
 export const MORSE_CODE: MorseCodeMap = {
