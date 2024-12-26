@@ -70,8 +70,6 @@ export default [
 			'@typescript-eslint/await-thenable': 'error',
 			'svelte/no-at-html-tags': 'off',
 			'svelte/no-inner-declarations': 'off',
-			'func-style': ['error', 'declaration'],
-			'@typescript-eslint/explicit-function-return-type': ['error'],
 			'func-style': 'off',
 			'@typescript-eslint/explicit-function-return-type': 'off',
 		},
