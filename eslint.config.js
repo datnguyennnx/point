@@ -70,6 +70,26 @@ export default [
 			'@typescript-eslint/await-thenable': 'error',
 			'svelte/no-at-html-tags': 'off',
 			'svelte/no-inner-declarations': 'off',
+			'func-style': ['error', 'declaration'],
+			'@typescript-eslint/explicit-function-return-type': ['error'],
+			'func-style': 'off',
+			'@typescript-eslint/explicit-function-return-type': 'off',
+		},
+	},
+	{
+		files: ['*.svelte'],
+		languageOptions: {
+			parser: svelteParser,
+			parserOptions: {
+				parser: tsParser,
+			},
+		},
+	},
+	{
+		files: ['**/*.test.ts'],
+		rules: {
+			'func-style': ['error', 'declaration'],
+			'@typescript-eslint/explicit-function-return-type': ['error'],
 		},
 	},
 	{
@@ -93,6 +113,7 @@ export default [
 			'svelte.config.js',
 			'postcss.config.js',
 			'vite.config.js',
+			'playwright.config.js',
 			'**/.pnpm-store',
 		],
 	},
