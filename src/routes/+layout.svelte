@@ -1,6 +1,7 @@
 <script lang="ts">
 import '../app.css'
 import { inject } from '@vercel/analytics'
+import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit'
 import { ModeWatcher } from 'mode-watcher'
 import { dev } from '$app/environment'
 import LoadingDot from '$lib/components/common/LoadingDot.svelte'
@@ -12,6 +13,7 @@ let { children } = $props()
 let databaseInitialized = $state(false)
 
 inject({ mode: dev ? 'development' : 'production' })
+injectSpeedInsights()
 
 // Initialize database on app startup
 $effect(() => {
