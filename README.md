@@ -10,11 +10,11 @@ Point is a privacy-focused, local-first software application designed to provide
 
 - **Frontend**: Svelte 5
 - **UI Library**: shadcn-svelte
-- **Data Storage**: PgLite
+- **Data Storage**: Pglite
 - **Desktop Runtime**: Tauri
 - **Build Tool**: Vite
 
-## Key Features
+## Philosophy
 
 ### 1. Local-First Architecture
 
@@ -22,28 +22,30 @@ Point is a privacy-focused, local-first software application designed to provide
 - **Offline Functionality**: Full application usability without internet connection
 - **Data Privacy**: User data remains entirely on the local device
 
-### 2. Productivity Tools
+### 2. Small Tools
 
 - **Morse Code Translator**: Encode and decode Morse code
 - **Todo Management**: Structured task tracking with advanced filtering
 - **Trip Planning**: Interactive mapping and annotation tools
 
-## Installation
+Local-first software is an approach that prioritizes storing data on users' local devices, enhancing privacy, security, and offline accessibility. This model ensures users maintain control over their data while still enabling seamless collaboration and synchronization across multiple devices. For a comprehensive exploration of this concept, you can refer to the article ["Local-first software: You own your data, in spite of the cloud" by Ink & Switch](https://www.inkandswitch.com/local-first/).
+
+## Contribute
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - pnpm package manager
-- Rust (for Tauri desktop build)
+- Rust (for Tauri desktop build) following [this documents](https://v2.tauri.app/start/prerequisites/)
 
 ### Setup Steps
 
 ```bash
 # Clone the repository
-git clone https://github.com/datnguyennnx/toolkits.git
+git clone https://github.com/datnguyennnx/point.git
 
 # Navigate to project directory
-cd toolkits
+cd point
 
 # Install dependencies
 pnpm install
@@ -52,26 +54,18 @@ pnpm install
 pnpm dev
 ```
 
-## Development
-
-### Project Structure
-
-- `src/`: Main application source code
-- `src/lib/`: Shared libraries and utilities
-- `src/routes/`: Application routing
-- `src-tauri/`: Rust backend for desktop integration
-
 ### Running the Application
 
 ```bash
 # Start development server
 pnpm dev
 
+# Start desktop app
+pnpm tauri
+
 # Build for production
 pnpm build
 ```
-
-## Contributing
 
 ### Reporting Issues
 

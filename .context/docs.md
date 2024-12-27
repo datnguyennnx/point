@@ -4,10 +4,10 @@
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - pnpm package manager
 - Rust (for Tauri)
-- PgLite for local data persistence
+- Pglite for local data persistence
 
 ### Installation
 
