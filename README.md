@@ -11,7 +11,6 @@ Point is a privacy-focused, local-first software application designed to provide
 - **Frontend**: Svelte 5
 - **UI Library**: shadcn-svelte
 - **Data Storage**: Pglite
-- **Desktop Runtime**: Tauri
 - **Build Tool**: Vite
 
 ## Philosophy
@@ -36,7 +35,6 @@ Local-first software is an approach that prioritizes storing data on users' loca
 
 - Node.js 20+
 - pnpm package manager
-- Rust (for Tauri desktop build) following [this documents](https://v2.tauri.app/start/prerequisites/)
 
 ### Setup Steps
 
@@ -59,9 +57,6 @@ pnpm dev
 ```bash
 # Start development server
 pnpm dev
-
-# Start desktop app
-pnpm tauri
 
 # Build for production
 pnpm build
