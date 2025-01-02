@@ -20,9 +20,6 @@ export default defineConfig({
 	},
 	define: {
 		'import.meta.env.VERCEL_ANALYTICS_ID': JSON.stringify(process.env.VERCEL_ANALYTICS_ID),
-		'import.meta.env.PUBLIC_MAPBOX_ACCESS_TOKEN': JSON.stringify(
-			process.env.PUBLIC_MAPBOX_ACCESS_TOKEN,
-		),
 	},
 	clearScreen: true,
 })
