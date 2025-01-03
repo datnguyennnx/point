@@ -4,10 +4,14 @@ import { inject } from '@vercel/analytics'
 import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit'
 import { ModeWatcher } from 'mode-watcher'
 import { dev } from '$app/environment'
-import LoadingDot from '$lib/components/common/LoadingDot.svelte'
-import AppSidebar from '$lib/components/common/Siderbar/AppSidebar.svelte'
-import { SidebarProvider, SidebarTrigger } from '$lib/components/ui/sidebar/index.js'
 import { databaseManager } from '$lib/database'
+import LoadingDot from '$lib/components/common/LoadingDot.svelte'
+import { onMount } from 'svelte'
+import { auth } from '$lib/stores/auth.svelte'
+
+onMount(async () => {
+	await auth.initAuth()
+})
 
 let { children } = $props()
 let databaseInitialized = $state(false)
@@ -34,11 +38,7 @@ $effect(() => {
 <ModeWatcher defaultMode="light" />
 <main>
 	{#if databaseInitialized}
-		<SidebarProvider>
-			<AppSidebar />
-			<SidebarTrigger />
-			{@render children()}
-		</SidebarProvider>
+		{@render children()}
 	{:else}
 		<LoadingDot />
 	{/if}
