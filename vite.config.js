@@ -10,16 +10,7 @@ export default defineConfig({
 		setupFiles: ['./tests/setup/vitest.setup.ts'],
 		include: ['tests/**/*.{test,spec}.{js,ts}'],
 	},
-	resolve: process.env.VITEST
-		? {
-				conditions: ['browser'],
-			}
-		: undefined,
 	optimizeDeps: {
 		exclude: ['@electric-sql/pglite'],
 	},
-	define: {
-		'import.meta.env.VERCEL_ANALYTICS_ID': JSON.stringify(process.env.VERCEL_ANALYTICS_ID),
-	},
-	clearScreen: true,
 })
