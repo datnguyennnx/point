@@ -1,4 +1,3 @@
-import { DatabaseMigration } from './migrate'
 import { PGlite } from '@electric-sql/pglite'
 
 export class DatabaseManager {
@@ -14,17 +13,21 @@ export class DatabaseManager {
 		return DatabaseManager.instance
 	}
 
-	/**
-	 * Initialize All Database Tables with Migration Support
-	 */
 	async initDatabase(): Promise<PGlite> {
 		if (this.db) return this.db
 
-		this.db = new PGlite('idb://AppDatabase')
+		this.db = new PGlite()
 
-		// Migration logic
-		await DatabaseMigration.migrateDatabase(this.db)
-
+		this.db.exec(`
+			CREATE TABLE IF NOT EXISTS todos (
+				id SERIAL PRIMARY KEY,
+				text TEXT NOT NULL,
+				description TEXT,
+				data TEXT,
+				completed BOOLEAN DEFAULT false,
+				created_at BIGINT NOT NULL
+			);
+		`)
 		return this.db
 	}
 
