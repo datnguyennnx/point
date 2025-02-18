@@ -11,6 +11,14 @@ const config = {
 			fallback: 'error.html',
 			runtime: 'nodejs20.x',
 		}),
+		prerender: {
+			handleHttpError: ({ path, referrer, message }) => {
+				if (path.startsWith('/auth/login')) {
+					return
+				}
+				throw new Error(message)
+			},
+		},
 	},
 }
 
