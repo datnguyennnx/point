@@ -7,11 +7,6 @@ import { dev } from '$app/environment'
 import { databaseManager } from '$lib/database'
 import LoadingDot from '$lib/components/common/LoadingDot.svelte'
 import { onMount } from 'svelte'
-import { auth } from '$lib/stores/auth.svelte'
-
-onMount(async () => {
-	await auth.initAuth()
-})
 
 let { children } = $props()
 let databaseInitialized = $state(false)

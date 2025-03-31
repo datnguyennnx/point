@@ -13,9 +13,6 @@ const config = {
 		}),
 		prerender: {
 			handleHttpError: ({ path, referrer, message }) => {
-				if (path.startsWith('/auth/login')) {
-					return
-				}
 				throw new Error(message)
 			},
 		},

@@ -19,9 +19,6 @@
 	},
 	"dependencies": {
 		"@electric-sql/pglite": "^0.2.15",
-		"@supabase/auth-helpers-sveltekit": "^0.13.0",
-		"@supabase/ssr": "^0.5.2",
-		"@supabase/supabase-js": "^2.47.10",
 		"@sveltejs/adapter-vercel": "^5.5.2",
 		"@tiptap/core": "^2.11.0",
 		"@tiptap/extension-highlight": "^2.11.0",
