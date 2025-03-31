@@ -1,62 +1,23 @@
 <!-- Map.svelte -->
 <script lang="ts">
-import mapboxgl from 'mapbox-gl'
-import { onDestroy } from 'svelte'
+import { MapLibre } from 'svelte-maplibre'
+// Adjust import for CommonJS compatibility as suggested by Vite error
+import maplibre from 'maplibre-gl'
+const { Marker, Popup } = maplibre
+import type { Map } from 'maplibre-gl' // Keep type import separate
 import type { MapMarker } from '../types/types'
-import { PUBLIC_MAPBOX_ACCESS_TOKEN } from '$env/static/public'
 
-// Use state instead of let for reactive variables
-let map = $state<mapboxgl.Map | null>(null)
-let markers = $state<{ [key: string]: mapboxgl.Marker }>({})
+// Use state for reactive variables
+let map = $state<Map | undefined>(undefined)
+let markers = $state<{ [key: string]: maplibre.Marker }>({}) // Use maplibre.Marker type
 
-// Add props interface for markers
+// Props interface remains the same
 const { markers: markersProp = [] } = $props<{
 	markers?: MapMarker[]
 }>()
 
-// Define initialization function
-function initMap(container: HTMLDivElement) {
-	// Initialize map
-	map = new mapboxgl.Map({
-		container,
-		style: 'mapbox://styles/mapbox/outdoors-v12',
-		center: [105, 15],
-		zoom: 5,
-		accessToken: PUBLIC_MAPBOX_ACCESS_TOKEN,
-	})
-
-	// Setup map events and layers
-	map.on('load', () => {
-		if (!map) return
-		setupEventHandlers(map)
-	})
-
-	// Cleanup on component destroy
-	onDestroy(() => {
-		// Remove all markers
-		Object.values(markers).forEach((marker) => marker.remove())
-
-		if (map) {
-			map.remove()
-		}
-	})
-}
-
-function setupEventHandlers(map: mapboxgl.Map) {
-	// Mouse enter/leave handlers remain the same
-	map.on('mouseenter', 'clusters', () => {
-		map.getCanvas().style.cursor = 'pointer'
-	})
-	map.on('mouseleave', 'clusters', () => {
-		map.getCanvas().style.cursor = ''
-	})
-}
-
 function updateMarkers(newMarkers: MapMarker[]) {
 	if (!map) return
-
-	// Type assertion for map instance
-	const mapInstance = map as mapboxgl.Map
 
 	// Remove markers that are no longer in the list
 	Object.keys(markers).forEach((key) => {
@@ -69,25 +30,25 @@ function updateMarkers(newMarkers: MapMarker[]) {
 	// Add or update markers
 	newMarkers.forEach((markerData) => {
 		const key = `${markerData.lngLat[0]},${markerData.lngLat[1]}`
-		if (!markers[key]) {
-			// Create popup
-			const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`<h2>${markerData.name}</h2>`)
+		if (!markers[key] && map) {
+			// Check map instance again
+			// Create popup using the destructured Popup
+			const popup = new Popup({ offset: 25 }).setHTML(`<h2>${markerData.name}</h2>`)
 
-			// Create marker with type-safe map instance
-			const marker = new mapboxgl.Marker()
-				.setLngLat(markerData.lngLat)
-				.setPopup(popup)
-				.addTo(mapInstance)
+			// Create marker using the destructured Marker
+			const marker = new Marker().setLngLat(markerData.lngLat).setPopup(popup).addTo(map) // Use map instance
 
 			markers[key] = marker
 		}
 	})
 }
+
 // Function to fly to a marker
 export function flyToMarker(lngLat: [number, number], zoom: number = 12) {
-	if (!map) return
+	if (!map) return // Use map instance
 
 	map.flyTo({
+		// Use map instance
 		center: lngLat,
 		zoom,
 		duration: 2000,
@@ -95,17 +56,37 @@ export function flyToMarker(lngLat: [number, number], zoom: number = 12) {
 	})
 }
 
-// Watch for changes in markers prop
+// Watch for changes in markers prop and map initialization
 $effect(() => {
-	if (map && markersProp) {
-		updateMarkers(markersProp)
+	if (map) {
+		// Setup map event handlers once map is available
+		map.on('mouseenter', 'clusters', () => {
+			if (map) map.getCanvas().style.cursor = 'pointer'
+		})
+		map.on('mouseleave', 'clusters', () => {
+			if (map) map.getCanvas().style.cursor = ''
+		})
+
+		// Update markers when map is ready or markersProp changes
+		if (markersProp) {
+			updateMarkers(markersProp)
+		}
 	}
 })
 
 // Export map instance for parent component
-export function getMap(): mapboxgl.Map | null {
+export function getMap(): Map | undefined {
 	return map
 }
 </script>
 
-<div class="h-full w-full" use:initMap></div>
+<!-- Use MapLibre component -->
+<MapLibre
+	bind:map={map}
+	class="h-full w-full"
+	style={'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json'}
+	center={[105, 15]}
+	zoom={5}
+/>
+
+<!-- Style block removed -->

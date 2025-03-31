@@ -30,7 +30,8 @@ function addMarker(marker: MapMarker) {
 			</div>
 		</div>
 	</div>
-	<div slot="right" class="flex w-1/2 overflow-hidden rounded-md border">
+	<!-- Added h-full to ensure the container has height -->
+	<div slot="right" class="flex h-full w-1/2 overflow-hidden rounded-md border">
 		<Map bind:this={mapComponent} markers={markers} />
 	</div>
 </SplitCanvas>

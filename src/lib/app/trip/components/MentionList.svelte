@@ -1,168 +1,159 @@
 <!-- MentionList.svelte -->
-
-<style>
-span {
-	transition: all 0.1s ease-in-out;
-}
-</style>
-
 <script lang="ts">
 import type { MentionItem } from '../types/types'
 
-let isOpen = $state(false)
-let items = $state<MentionItem[]>([])
-let selectedIndex = $state(0)
-// Add these new props
-let top = $state(0)
-let left = $state(0)
+interface FormattedLocationPart {
+	text: string
+	isMatch: boolean
+}
 
-const { command } = $props<{
+// Props
+const { items: rawItems, command } = $props<{
 	items: MentionItem[]
 	command: (item: MentionItem) => void
 }>()
 
-function selectItem(item: MentionItem): void {
-	command(item)
-	hide()
-}
+// State
+let isOpen = $state(false)
+let selectedIndex = $state(0)
+let top = $state(0)
+let left = $state(0)
 
+// Derived state for formatted items - recalculates only when rawItems changes
+const items = $derived(
+	rawItems.map((item: MentionItem) => ({
+		// Explicitly type 'item' here
+		...item,
+		formattedParts: createFormattedLabelParts(item, item.label), // Pass original query label for matching
+	})),
+)
+
+// --- Exported API for bind:this ---
 export function show(): void {
 	isOpen = true
+	selectedIndex = 0 // Reset index when showing
 }
 
 export function hide(): void {
 	isOpen = false
 }
 
-export function update(newItems: MentionItem[]): void {
-	items = newItems
-	selectedIndex = 0 // Reset selection on update
-}
-
-export function onKeyDown(event: KeyboardEvent): boolean {
-	if (!isOpen) return false
-
-	if (event.key === 'ArrowUp') {
-		event.preventDefault()
-		selectedIndex = (selectedIndex - 1 + items.length) % items.length
-		return true
-	}
-
-	if (event.key === 'ArrowDown') {
-		event.preventDefault()
-		selectedIndex = (selectedIndex + 1) % items.length
-		return true
-	}
-
-	if (event.key === 'Escape') {
-		hide()
-	}
-
-	if (event.key === 'Enter') {
-		event.preventDefault()
-		if (items[selectedIndex]) {
-			selectItem(items[selectedIndex])
-			return true
-		}
-	}
-
-	return false
-}
-
-export function getSelectedItem(): MentionItem | undefined {
-	return items[selectedIndex]
-}
+// Update function is no longer needed externally as items are derived from props
+// export function update(newItems: MentionItem[]): void { ... }
 
 export function updatePosition(position: { top: number; left: number }): void {
 	top = position.top
 	left = position.left
 }
 
-interface FormattedLocation {
-	text: string
-	isMatch: boolean
+export function onKeyDown(event: KeyboardEvent): boolean {
+	if (!isOpen || items.length === 0) return false
+
+	switch (event.key) {
+		case 'ArrowUp':
+			event.preventDefault()
+			selectedIndex = (selectedIndex - 1 + items.length) % items.length
+			return true
+		case 'ArrowDown':
+			event.preventDefault()
+			selectedIndex = (selectedIndex + 1) % items.length
+			return true
+		case 'Enter':
+			event.preventDefault()
+			selectItem(items[selectedIndex])
+			return true
+		case 'Escape':
+			event.preventDefault() // Prevent closing modals etc.
+			hide()
+			return true // Indicate we handled the key
+		default:
+			return false // Let Tiptap handle other keys
+	}
+}
+// --- End Exported API ---
+
+function selectItem(item: MentionItem): void {
+	command(item)
+	hide() // Hide after selection
 }
 
-function formatLocationLabel(item: MentionItem): FormattedLocation[] {
-	if (!item.location?.formattedAddress) {
-		return [
-			{
-				text: item.label,
-				isMatch: false,
-			},
-		]
-	}
-
-	const address = item.location.formattedAddress
-	const searchTerm = item.label.toLowerCase()
+// Helper to format label parts for highlighting
+function createFormattedLabelParts(item: MentionItem, searchTerm: string): FormattedLocationPart[] {
+	const address = item.location?.formattedAddress ?? item.label // Fallback to label if no address
+	const normalizedSearchTerm = searchTerm.toLowerCase().trim()
 	const addressLower = address.toLowerCase()
+	const parts: FormattedLocationPart[] = []
 
-	// If no match found, return the whole address
-	if (!addressLower.includes(searchTerm)) {
-		return [
-			{
-				text: address,
-				isMatch: false,
-			},
-		]
+	if (!normalizedSearchTerm || !address) {
+		return [{ text: address || item.label, isMatch: false }]
 	}
 
-	const index = addressLower.indexOf(searchTerm)
-	const parts: FormattedLocation[] = []
+	let lastIndex = 0
+	let index = addressLower.indexOf(normalizedSearchTerm, lastIndex)
 
-	// Add text before match
-	if (index > 0) {
-		parts.push({
-			text: address.slice(0, index),
-			isMatch: false,
-		})
+	if (index === -1) {
+		// No match found, return the whole address as non-matching
+		return [{ text: address, isMatch: false }]
 	}
 
-	// Add matching text
-	parts.push({
-		text: address.slice(index, index + searchTerm.length),
-		isMatch: true,
-	})
+	while (index !== -1) {
+		// Add text before the match
+		if (index > lastIndex) {
+			parts.push({ text: address.slice(lastIndex, index), isMatch: false })
+		}
+		// Add the matching text
+		const matchEndIndex = index + normalizedSearchTerm.length
+		parts.push({ text: address.slice(index, matchEndIndex), isMatch: true })
 
-	// Add text after match
-	if (index + searchTerm.length < address.length) {
-		parts.push({
-			text: address.slice(index + searchTerm.length),
-			isMatch: false,
-		})
+		lastIndex = matchEndIndex
+		// Find the next occurrence
+		index = addressLower.indexOf(normalizedSearchTerm, lastIndex)
+	}
+
+	// Add any remaining text after the last match
+	if (lastIndex < address.length) {
+		parts.push({ text: address.slice(lastIndex), isMatch: false })
 	}
 
 	return parts
 }
+
+// Effect to reset index if items change externally (e.g., new search results)
+$effect(() => {
+	// Check if selectedIndex is out of bounds after items update
+	if (selectedIndex >= items.length) {
+		selectedIndex = Math.max(0, items.length - 1) // Adjust to last item or 0 if empty
+	}
+})
 </script>
 
+<!-- Using Tailwind classes from Shadcn UI conventions -->
 <div
-	class="fixed z-50 max-h-[300px] w-full max-w-sm overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-	style="top: {top}px; left: {left}px"
-	class:hidden={!isOpen}
+	class:hidden={!isOpen || items.length === 0}
+	class="fixed z-50 max-h-[300px] w-full max-w-xs overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
+	style="top: {top}px; left: {left}px;"
 	role="listbox"
-	tabindex="0"
-	onkeydown={onKeyDown}
+	aria-label="Location suggestions"
 >
-	{#if items.length === 0}
-		<div class="px-4 py-3 text-sm text-gray-500">No locations found.</div>
+	{#if items.length === 0 && isOpen}
+		<!-- Show only if explicitly opened but no items -->
+		<div class="p-2 text-sm text-muted-foreground">No locations found.</div>
 	{:else}
-		{#each items as item, index}
+		{#each items as item, index (item.id)}
+			{@const isSelected = index === selectedIndex}
 			<button
-				class="relative w-full cursor-pointer select-none px-4 py-2.5 text-left text-sm transition-colors duration-150 ease-in-out hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
-				class:bg-blue-100={index === selectedIndex}
-				class:text-blue-900={index === selectedIndex}
+				type="button"
 				role="option"
-				aria-selected={index === selectedIndex}
+				aria-selected={isSelected}
+				class="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+				class:bg-accent={isSelected}
+				class:text-accent-foreground={isSelected}
 				onclick={() => selectItem(item)}
+				onmouseenter={() => (selectedIndex = index)}
 			>
-				<span class="block font-normal">
-					{#each formatLocationLabel(item) as part}
-						<span
-							class:font-medium={part.isMatch}
-							class:text-blue-600={part.isMatch}
-							class="transition-colors duration-150"
-						>
+				<span class="block truncate">
+					{#each item.formattedParts as part (part.text + part.isMatch)}
+						<span class:font-semibold={part.isMatch} class:text-primary={part.isMatch}>
 							{part.text}
 						</span>
 					{/each}

@@ -6,10 +6,14 @@ import Suggestion from '@tiptap/suggestion'
 import type {
 	MentionItem,
 	SuggestionCommandProps,
-	SuggestionKeyboardHandlerProps,
+	// SuggestionKeyboardHandlerProps, // No longer needed here
 } from '../types/types'
 import type { Editor } from '@tiptap/core'
-import type { EditorState } from '@tiptap/pm/state'
+import type { EditorState, Transaction } from '@tiptap/pm/state'
+import { PluginKey } from '@tiptap/pm/state'
+
+// Define a PluginKey for potential future state management within the plugin itself
+export const MentionPluginKey = new PluginKey('mention')
 
 interface MentionState {
 	lastQuery: string
@@ -17,10 +21,123 @@ interface MentionState {
 	isSearching: boolean
 }
 
+// Simple cache state (consider instance-specific state if multiple editors needed)
 const mentionState: MentionState = {
 	lastQuery: '',
 	lastResults: [],
 	isSearching: false,
+}
+
+function normalizeSearchTerm(query: string): string {
+	// Keep the original logic, seems fine
+	return query.replace('@', '').toLowerCase().trim().replace(/\s+/g, ' ')
+}
+
+export const debouncedLocationSearch = debounce(async (query: string): Promise<MentionItem[]> => {
+	const searchTerm = normalizeSearchTerm(query)
+	if (searchTerm.length < 2) return [] // Check length after normalization
+
+	// Prevent concurrent searches more robustly
+	if (mentionState.isSearching) {
+		console.log('Search already in progress for:', mentionState.lastQuery)
+		return mentionState.lastResults // Return previous results immediately
+	}
+
+	// Return cached results if query hasn't changed significantly
+	// (Could add more sophisticated caching/comparison if needed)
+	if (searchTerm === mentionState.lastQuery) {
+		return mentionState.lastResults
+	}
+
+	mentionState.isSearching = true
+	mentionState.lastQuery = searchTerm // Update lastQuery immediately
+
+	try {
+		console.log('Searching for:', searchTerm)
+		const locations = await OptimizedGeocodingService.geocode(searchTerm, {
+			timeout: 5000,
+			limit: 5,
+			types: ['place', 'address', 'poi'],
+		})
+
+		const results = locations
+			.filter((location) => location.formattedAddress && location.confidence > 0.3)
+			.map((location) => ({
+				id: `${location.latitude},${location.longitude}`,
+				label: location.formattedAddress || `${location.latitude}, ${location.longitude}`,
+				location,
+				confidence: location.confidence,
+				metadata: location.metadata,
+			}))
+			.sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
+			.slice(0, 5)
+
+		mentionState.lastResults = results
+		console.log('Search results:', results)
+		return results
+	} catch (error) {
+		console.error('Location search error:', error)
+		mentionState.lastResults = [] // Clear cache on error
+		return []
+	} finally {
+		mentionState.isSearching = false
+	}
+}, 250) // Keep debounce time reasonable
+
+export function handleMentionCommand(
+	state: EditorState,
+	dispatch: (tr: Transaction) => void,
+	item: MentionItem,
+	editor: Editor,
+): void {
+	if (!state || !dispatch) return
+
+	try {
+		// Determine the range of the text to be replaced (from '@' to cursor)
+		const { from, to } = state.selection
+		let mentionStart = from
+		let foundAt = false
+		// Search backwards for the '@' symbol
+		state.doc.nodesBetween(Math.max(0, from - 50), from, (node, pos) => {
+			if (foundAt) return false // Stop searching once '@' is found
+			if (node.isText) {
+				const text = node.text ?? ''
+				const atIndex = text.lastIndexOf('@')
+				if (atIndex !== -1) {
+					// Calculate the absolute start position of the mention trigger
+					mentionStart = pos + atIndex
+					foundAt = true
+					return false // Stop searching
+				}
+			}
+			return true // Continue searching
+		})
+
+		if (!foundAt) return // '@' not found before cursor
+
+		const mentionText = `@${item.label}` // Use the selected item's label
+		const mentionEnd = mentionStart + mentionText.length
+
+		// Create and dispatch transaction to replace the query with the mention
+		const tr = state.tr
+			.insertText(mentionText, mentionStart, to) // Replace from '@' start to current cursor pos
+			.scrollIntoView() // Ensure the mention is visible
+		dispatch(tr)
+
+		// Apply highlighting and move cursor after the mention + space
+		// Use a separate transaction chain for post-insertion formatting
+		editor
+			.chain()
+			.focus(undefined, { scrollIntoView: false }) // Keep focus, don't scroll again
+			.setTextSelection({ from: mentionStart, to: mentionEnd })
+			.setHighlight({ color: '#e9d5ff' }) // Use your desired highlight color
+			.setTextSelection(mentionEnd) // Move cursor to the end
+			.insertContent(' ') // Add a space after the mention
+			.unsetHighlight() // Remove highlight from the space and subsequent text
+			.run()
+	} catch (error) {
+		console.error('Error handling mention command:', error)
+	}
 }
 
 export const CustomMention = Extension.create({
@@ -30,49 +147,24 @@ export const CustomMention = Extension.create({
 		return {
 			suggestion: {
 				char: '@',
-				command: ({ editor, props }: SuggestionCommandProps) => {
-					if (editor.view) {
-						const { state, dispatch } = editor.view
-						handleMentionCommand(state, dispatch, props as MentionItem, editor)
-					}
-				},
+				pluginKey: MentionPluginKey, // Associate with the plugin key
+				// The command is now handled within TextEditor.svelte via the render().onExit/selectItem logic
+				// command: ({ editor, props }: SuggestionCommandProps) => { ... }
+
+				// Fetch items using the debounced search
 				items: async ({ query }: { query: string }): Promise<MentionItem[]> => {
-					const normalizedQuery = normalizeSearchTerm(query)
-
-					// Return cached results if query hasn't changed
-					if (normalizedQuery === mentionState.lastQuery && mentionState.lastResults.length > 0) {
-						return mentionState.lastResults
-					}
-
-					// Minimum query length check
-					if (normalizedQuery.length < 2) {
-						mentionState.lastResults = []
-						return []
-					}
-
-					// Prevent concurrent searches
-					if (mentionState.isSearching) {
-						return mentionState.lastResults
-					}
-
-					try {
-						mentionState.isSearching = true
-						const results = await debouncedLocationSearch(query)
-						mentionState.lastQuery = normalizedQuery
-						mentionState.lastResults = results
-						return results
-					} finally {
-						mentionState.isSearching = false
-					}
+					// No need for caching logic here, debounced function handles it
+					return await debouncedLocationSearch(query)
 				},
-				keyboardHandler: ({ event }: SuggestionKeyboardHandlerProps): boolean => {
-					const isNavigationKey = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(event.key)
-					if (isNavigationKey) {
-						event.preventDefault()
-						return true
-					}
-					return false
-				},
+
+				// Removed keyboardHandler - it's handled by MentionList via render().onKeyDown
+				// keyboardHandler: ({ event }: SuggestionKeyboardHandlerProps): boolean => { ... }
+
+				// Allow spaces in mentions if needed (adjust regex if required)
+				allowSpaces: true,
+
+				// Optional: Customize the regex if needed, default usually works
+				// regex: /(@\w*)$/,
 			},
 		}
 	},
@@ -86,77 +178,3 @@ export const CustomMention = Extension.create({
 		]
 	},
 })
-
-export function handleMentionCommand(
-	state: EditorState,
-	dispatch: any,
-	item: MentionItem,
-	editor: Editor,
-): void {
-	if (!state || !dispatch) return
-	try {
-		const { from, to } = state.selection
-		const textBefore = state.doc.textBetween(Math.max(0, from - 50), from)
-		const atIndex = textBefore.lastIndexOf('@')
-		if (atIndex === -1) return
-
-		const start = from - (textBefore.length - atIndex)
-		const mentionText = `@${item.label}`
-		const mentionEnd = start + mentionText.length
-
-		// Create and dispatch transaction
-		const tr = state.tr.deleteRange(start, to).insertText(mentionText, start)
-		dispatch(tr)
-
-		// Apply highlighting and formatting
-		editor
-			.chain()
-			.focus()
-			.setTextSelection({ from: start, to: mentionEnd })
-			.setHighlight({ color: '#e9d5ff' })
-			.setTextSelection(mentionEnd)
-			.insertContent(' ')
-			.unsetHighlight()
-			.run()
-	} catch (error) {
-		console.error('Error handling mention command:', error)
-	}
-}
-
-function normalizeSearchTerm(query: string): string {
-	return query.replace('@', '').toLowerCase().trim().replace(/\s+/g, ' ')
-}
-
-export const debouncedLocationSearch = debounce(async (query: string): Promise<MentionItem[]> => {
-	const searchTerm = normalizeSearchTerm(query)
-	if (!searchTerm) return []
-	try {
-		const locations = await OptimizedGeocodingService.geocode(searchTerm, {
-			timeout: 5000, // 5 second timeout
-			limit: 5,
-			types: ['place', 'address', 'poi'],
-		})
-		return locations
-			.filter((location) => location.formattedAddress && location.confidence > 0.3)
-			.map((location) => ({
-				id: `${location.latitude},${location.longitude}`,
-				label: location.formattedAddress || `${location.latitude}, ${location.longitude}`,
-				location,
-				confidence: location.confidence,
-				metadata: location.metadata,
-				function: () => {
-					handleLocationSelection(location)
-				},
-			}))
-			.sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
-			.slice(0, 5)
-	} catch (error) {
-		console.error('Location search error:', error)
-		return []
-	}
-}, 250)
-
-// Helper functions
-function handleLocationSelection(location: any): void {
-	console.log('Selected location:', location)
-}
